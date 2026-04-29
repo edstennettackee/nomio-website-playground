@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Nomio · Contract Management Service for In-House Legal Teams</title>
+<meta name="description" content="Nomio is the contract management service for lean in-house legal teams. We ingest, structure, and maintain. You search, review, and sign off. Live in weeks, not quarters."/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fraunces:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&family=Newsreader:ital,wght@0,300;0,400;1,300;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  html, body { margin: 0; padding: 0; background: #faf9fa; }
+  * { box-sizing: border-box; }
+  body { font-family: 'Inter', sans-serif; color: #282731; }
+  em { font-style: italic; }
+  button { font-family: inherit; cursor: pointer; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="components/Logo.jsx"></script>
+<script type="text/babel" src="components/copy.jsx"></script>
+<script type="text/babel" src="components/ContractTable.jsx"></script>
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+<script type="text/babel" src="variations/V14_4_LedgerAnims_v9.jsx"></script>
+<script type="text/babel" src="variations/V14_4_Ledger_v9.jsx"></script>
+
+<script type="text/babel" data-presets="react">
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "paper": "#faf9fa",
+  "ink": "#282731",
+  "accent": "#3E5C3A",
+  "industryStat": 50,
+  "nomioStat": 100,
+  "headline": "Stop managing your contracts manually.",
+  "showTrustBand": true,
+  "ctaLabel": "Book a demo →"
+}/*EDITMODE-END*/;
+
+const App = () => {
+  const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
+  return (
+    <div style={{ display: 'flex', justifyContent: 'center', background: t.paper }}>
+      <V14_4Home tweaks={t} />
+      <TweaksPanel>
+        <TweakSection label="Colors" />
+        <TweakColor label="Background" value={t.paper} onChange={(v) => setTweak('paper', v)} />
+        <TweakColor label="Ink" value={t.ink} onChange={(v) => setTweak('ink', v)} />
+        <TweakColor label="Accent" value={t.accent} onChange={(v) => setTweak('accent', v)} />
+        <TweakSection label="Implementation stats" />
+        <TweakSlider label="CLM industry" value={t.industryStat} min={0} max={100} unit="%" onChange={(v) => setTweak('industryStat', v)} />
+        <TweakSlider label="Nomio" value={t.nomioStat} min={0} max={100} unit="%" onChange={(v) => setTweak('nomioStat', v)} />
+        <TweakSection label="Content" />
+        <TweakText label="Hero headline" value={t.headline} onChange={(v) => setTweak('headline', v)} />
+        <TweakText label="Primary CTA" value={t.ctaLabel} onChange={(v) => setTweak('ctaLabel', v)} />
+        <TweakToggle label="Logo trust band" value={t.showTrustBand} onChange={(v) => setTweak('showTrustBand', v)} />
+      </TweaksPanel>
+    </div>
+  );
+};
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
