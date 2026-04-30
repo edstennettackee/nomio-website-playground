@@ -64,13 +64,13 @@ const V14_4Home = () => {
   const ink = '#282731';
   const paper = '#faf9fa';
   const card = '#faf9fa';
-  const accent = '#3E5C3A';
+  const accent = '#7F0080';
   const muted = 'rgba(40,39,49,.56)';
   const faint = 'rgba(40,39,49,.40)';
   const rule = 'rgba(40,39,49,.12)';
   const hair = 'rgba(40,39,49,.08)';
 
-  const wrap = { width: 1280, background: paper, color: ink, fontFamily: '"Inter", sans-serif', fontSize: 15, lineHeight: 1.6 };
+  const wrap = { width: 1280, color: ink, fontFamily: '"Inter", sans-serif', fontSize: 15, lineHeight: 1.6 };
   const serif = { fontFamily: '"Fraunces", "Newsreader", Georgia, serif', fontWeight: 380 };
   const PAD = 80;
   const animColors = { ink, paper, accent, muted, faint, hair, rule };
@@ -91,16 +91,33 @@ const V14_4Home = () => {
 
 
   const svgLogos = [
-    { src: 'assets/logos/fever-tree.svg', alt: 'Fever-Tree', h: 28 },
-    { src: 'assets/logos/parcelab.svg', alt: 'parcelLab', h: 26 },
-    { src: 'assets/logos/secret-escapes.svg', alt: 'Secret Escapes', h: 22 },
-    { src: 'assets/logos/lendinvest.svg', alt: 'LendInvest', h: 20 },
-    { src: 'assets/logos/shawbrook.svg', alt: 'Shawbrook', h: 28 },
-    { src: 'assets/logos/aa.svg', alt: 'AA', h: 32 },
-    { src: 'assets/logos/ms.svg', alt: 'M&S', h: 28 },
-    { src: 'assets/logos/tangle-teezer.svg', alt: 'Tangle Teezer', h: 22 },
+    { src: 'assets/logos/fever-tree.svg', alt: 'Fever-Tree', h: 34 },
+    {
+      src: 'assets/logos/parcelab.svg', alt: 'parcelLab', h: 32,
+      caseStudy: {
+        quote: "There is no one else on the market that offers this level of customisation with a repository.",
+        name: 'Jessica Bann',
+        title: 'Head of Legal, parcelLab',
+        avatarSeed: 0,
+      }
+    },
+    { src: 'assets/logos/secret-escapes.svg', alt: 'Secret Escapes', h: 28 },
+    {
+      src: 'assets/logos/lendinvest.svg', alt: 'LendInvest', h: 26,
+      caseStudy: {
+        quote: "We went from a scattered mess of contracts across shared drives to a single searchable source of truth. The team could not believe how fast we were live.",
+        name: 'Rachel Moore',
+        title: 'General Counsel, LendInvest',
+        avatarSeed: 3,
+      }
+    },
+    { src: 'assets/logos/shawbrook.svg', alt: 'Shawbrook', h: 34 },
+    { src: 'assets/logos/aa.svg', alt: 'AA', h: 38 },
+    { src: 'assets/logos/ms.svg', alt: 'M&S', h: 34 },
+    { src: 'assets/logos/tangle-teezer.svg', alt: 'Tangle Teezer', h: 28 },
+    { src: 'assets/logos/belron.svg', alt: 'Belron', h: 28 },
   ];
-  const textLogos = ['Randstad', 'Merseyrail', 'Modaxo', 'Waterstones'];
+  const textLogos = ['Randstad', 'Merseyrail', 'Modaxo'];
 
   // Small circular portrait (placeholder)
   const Avatar = ({ seed, size = 44 }) => {
@@ -117,6 +134,53 @@ const V14_4Home = () => {
         </svg>
       </div>);
 
+  };
+
+  const LogoWithCard = ({ src, alt, h, caseStudy }) => {
+    const [hovered, setHovered] = React.useState(false);
+    return (
+      <div
+        style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '20px 24px', cursor: caseStudy ? 'pointer' : 'default' }}
+        onMouseEnter={() => caseStudy && setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+      >
+        {caseStudy && (
+          <div style={{
+            position: 'absolute',
+            bottom: 'calc(100% + 10px)',
+            left: '50%',
+            transform: `translateX(-50%) translateY(${hovered ? 0 : 10}px)`,
+            opacity: hovered ? 1 : 0,
+            pointerEvents: hovered ? 'auto' : 'none',
+            transition: 'opacity 200ms ease, transform 200ms ease',
+            width: 272,
+            background: accent,
+            borderRadius: 12,
+            padding: '20px 20px 18px',
+            zIndex: 20,
+          }}>
+            <p style={{ ...serif, fontSize: 15, lineHeight: 1.55, margin: '0 0 16px', color: 'rgba(255,255,255,0.95)', fontWeight: 340, fontStyle: 'italic' }}>
+              &ldquo;{caseStudy.quote}&rdquo;
+            </p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, borderTop: '1px solid rgba(255,255,255,0.18)', paddingTop: 14 }}>
+              <Avatar seed={caseStudy.avatarSeed} size={38} />
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.96)', lineHeight: 1.3 }}>{caseStudy.name}</div>
+                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.62)', lineHeight: 1.3, marginTop: 2 }}>{caseStudy.title}</div>
+              </div>
+            </div>
+            {/* Caret */}
+            <div style={{ position: 'absolute', bottom: -7, left: '50%', transform: 'translateX(-50%)', width: 14, height: 7, overflow: 'hidden' }}>
+              <div style={{ width: 14, height: 14, background: accent, transform: 'rotate(45deg) translate(-5px, -5px)', borderRadius: 2 }} />
+            </div>
+          </div>
+        )}
+        <img src={src} alt={alt} style={{ height: h, width: 'auto', maxWidth: 140, opacity: hovered ? 0.72 : 0.52, display: 'block', transition: 'opacity 200ms ease' }} />
+        <div style={{ marginTop: 8, fontSize: 11, letterSpacing: 0.3, color: accent, fontWeight: 600, background: caseStudy ? 'rgba(127,0,128,0.09)' : 'transparent', borderRadius: 20, padding: '3px 10px', visibility: caseStudy ? 'visible' : 'hidden' }}>
+          Case study →
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -154,15 +218,15 @@ const V14_4Home = () => {
       </section>
 
       {/* 2. TRUST BAND */}
-      <section style={{ padding: `0 ${PAD}px 80px` }}>
-        <div style={{ borderTop: `1px solid ${rule}`, borderBottom: `1px solid ${rule}`, padding: '36px 0' }}>
+      <section style={{ padding: `0 ${PAD}px 80px`, overflow: 'visible' }}>
+        <div style={{ borderTop: `1px solid ${rule}`, borderBottom: `1px solid ${rule}`, padding: '36px 0', overflow: 'visible' }}>
           <div style={{ fontSize: 11, letterSpacing: 1.8, textTransform: 'uppercase', color: faint, fontWeight: 700, marginBottom: 28 }}>
             Trusted by hundreds of lean in-house legal teams
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '0' }}>
-            {svgLogos.map(({ src, alt, h }) => (
-              <div key={alt} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px 24px' }}>
-                <img src={src} alt={alt} style={{ height: h, width: 'auto', maxWidth: 130, opacity: 0.42, display: 'block' }} />
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '0', overflow: 'visible' }}>
+            {svgLogos.map(({ src, alt, h, caseStudy }) => (
+              <div key={alt} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'visible' }}>
+                <LogoWithCard src={src} alt={alt} h={h} caseStudy={caseStudy} />
               </div>
             ))}
             {textLogos.map((name) => (
@@ -179,17 +243,17 @@ const V14_4Home = () => {
         <Ledger4HeroAnim {...animColors} />
       </section>
 
-      {/* 3. THE PAIN, NAMED — with animations per pain */}
+      {/* 3. THE PAIN — with animations per pain */}
       <section style={{ padding: `80px ${PAD}px 128px`, borderTop: `1px solid ${rule}` }}>
-        <SectionLabel label="The pain, named" />
+        <SectionLabel label="The pain" />
         <h2 style={{ ...serif, fontSize: 68, lineHeight: 1, letterSpacing: '-0.025em', fontWeight: 340, margin: '24px 0 56px', maxWidth: 1080 }}>
-          Contract management <em>shouldn’t feel like</em> a full-time job.
+          Contract management shouldn’t feel like <em>a full-time job</em>.
         </h2>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 0, borderTop: `1px solid ${ink}` }}>
           {[
           { t: 'Manual data entry takes forever.', anim: <PainManualAnim {...animColors} />, b: <>Hours lost entering contract details into spreadsheets.</> },
-          { t: 'Manual data entry takes forever.', anim: <PainTrustAnim {...animColors} />, b: <>Hours lost entering contract details into spreadsheets.</> },
-          { t: 'Manual data entry takes forever.', anim: <PainTimeAnim {...animColors} />, b: <>Hours lost entering contract details into spreadsheets.</> }].
+          { t: 'You can’t trust the data that’s been entered.', anim: <PainTrustAnim {...animColors} />, b: <>Different data entry standards lead to out-of-date, inconsistent, and inaccurate data.</> },
+          { t: 'Finding answers is slow and frustrating.', anim: <PainTimeAnim {...animColors} />, b: <>Every minute spent CTRL+F’ing is time wasted doing admin instead of higher-value work.</> }].
           map((c, i) =>
           <div key={i} style={{ padding: '32px 28px 0', borderRight: i < 2 ? `1px solid ${rule}` : 'none', paddingLeft: i === 0 ? 0 : 28, display: 'flex', flexDirection: 'column', gap: 18 }}>
               <h3 style={{ ...serif, fontSize: 28, lineHeight: 1.15, margin: 0, fontWeight: 380, letterSpacing: '-0.01em' }}>{c.t}</h3>
@@ -200,7 +264,7 @@ const V14_4Home = () => {
         </div>
       </section>
 
-      {/* HARVEY-STYLE: What is Nomio + big product animation */}
+      {/* What is Nomio + big product animation */}
       <section style={{ padding: `0 ${PAD}px 128px` }}>
         <h2 style={{ ...serif, lineHeight: 1.05, fontWeight: 340, margin: '0 0 64px', maxWidth: 1080, fontSize: "58px", letterSpacing: "-3.16px", width: "980px" }}>
           Nomio is the contract management service for lean in-house legal teams.{' '}
@@ -251,12 +315,12 @@ Stop managing your contracts manually, and focus on the work that matters.</span
       <section style={{ padding: `0 ${PAD}px 128px` }}>
         <SectionLabel label="The three pillars" />
         <h2 style={{ ...serif, fontSize: 60, lineHeight: 1, letterSpacing: '-0.02em', fontWeight: 340, margin: '22px 0 56px', maxWidth: 920 }}>
-          All your contracts, organised, accurate, and <em>searchable</em>, without lifting a finger.
+          All your contracts, organised, accurate, and searchable, <em>without lifting a finger</em>.
         </h2>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 0, borderTop: `1px solid ${ink}` }}>
           {[{ tag: 'No more admin, ever', title: 'Managed', body: <>Every time you upload new contracts, we’ll organise them, capture key terms, flag missing documents, and add them to your contract repository.</>, quote: 'We click forward, we type in documents@nomio, and we don\'t have to do anything.', name: 'Sarah Mitchell', role: 'General Counsel, Belron', seed: 0, anim: <Ledger4ManagedAnim {...animColors} /> },
-          { tag: 'No more admin, ever', title: 'Accurate', body: <>Every time you upload new contracts, we’ll organise them, capture key terms, flag missing documents, and add them to your contract repository.</>, quote: 'It has performed as expected every time. It\'s pulled back every single one reliably.', name: 'David Chen', role: 'Legal Director, Modaxo', seed: 1, anim: <Ledger4AccurateAnim {...animColors} /> },
-          { tag: 'No more admin, ever', title: 'Searchable', body: <>Every time you upload new contracts, we’ll organise them, capture key terms, flag missing documents, and add them to your contract repository.</>, quote: 'If somebody asks a question on a lease, I can find it while we\'re sat in that meeting.', name: 'Priya Shah', role: 'Head of Legal, Randstad', seed: 2, anim: <Ledger4SearchableAnim {...animColors} /> }].
+          { tag: 'Reliable Contract Repository', title: 'Accurate', body: <>We capture anything you care about in a contract — key dates, renewal terms, payment structures, and more — and give you a filterable contract repository you can trust.</>, quote: 'It has performed as expected every time. It\'s pulled back every single one reliably.', name: 'David Chen', role: 'Legal Director, Modaxo', seed: 1, anim: <Ledger4AccurateAnim {...animColors} /> },
+          { tag: 'Answer questions in seconds', title: 'Searchable', body: <>The ultimate CTRL + F replacement. Nomio lets you search across every clause in all your contracts at once. Click any clause to go straight to it, right in the contract.</>, quote: 'If somebody asks a question on a lease, I can find it while we\'re sat in that meeting.', name: 'Priya Shah', role: 'Head of Legal, Randstad', seed: 2, anim: <Ledger4SearchableAnim {...animColors} /> }].
           map((p, i) =>
           <div key={i} style={{ padding: '28px 28px 32px', paddingLeft: i === 0 ? 0 : 28, paddingRight: i === 2 ? 0 : 28, borderRight: i < 2 ? `1px solid ${rule}` : 'none', display: 'flex', flexDirection: 'column', gap: 18 }}>
               <div style={{ fontSize: 10.5, letterSpacing: 1.6, textTransform: 'uppercase', color: accent, fontWeight: 700 }}>{p.tag}</div>
@@ -288,8 +352,8 @@ Stop managing your contracts manually, and focus on the work that matters.</span
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 0, borderTop: `1px solid ${ink}` }}>
           {[
           { n: '01', t: 'Find and upload', anim: <HowFindUploadAnim {...animColors} />, b: <>Connect your Docusign or send a shared drive link and we’ll process an initial batch of your contracts.</> },
-          { n: '02', t: 'Calibrate', anim: <HowCalibrateAnim {...animColors} />, b: <>Connect your Docusign or send a shared drive link and we’ll process an initial batch of your contracts.</> },
-          { n: '03', t: 'Maintain', anim: <HowMaintainAnim {...animColors} />, b: <>Connect your Docusign or send a shared drive link and we’ll process an initial batch of your contracts.</> }].
+          { n: '02', t: 'Calibrate', anim: <HowCalibrateAnim {...animColors} />, b: <>We align and tailor our approach to your business needs, building an internal blueprint for your account.</> },
+          { n: '03', t: 'Maintain', anim: <HowMaintainAnim {...animColors} />, b: <>We group contracts, capture and calculate key information, flag missing data & build your repository.</> }].
           map((s, i) =>
           <div key={i} style={{ padding: '32px 28px 28px', paddingLeft: i === 0 ? 0 : 28, paddingRight: i === 2 ? 0 : 28, borderRight: i < 2 ? `1px solid ${rule}` : 'none', display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div style={{ ...serif, fontSize: 48, color: accent, lineHeight: 1, fontWeight: 340 }}>{s.n}</div>
