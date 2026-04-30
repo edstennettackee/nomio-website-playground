@@ -26,10 +26,10 @@ const Ledger4AnimStyles = () => (
 );
 
 /* ---------- HERO (re-used name) ---------- */
-const Ledger4HeroAnim = ({ ink, paper, accent, muted, faint, hair, rule }) => {
+const Ledger4HeroAnim = ({ ink, paper, accent, muted, faint, hair, rule, bg }) => {
   const docs = [0,1,2,3,4];
   return (
-    <div style={{ position:'relative', width:'100%', height:340, background:paper, border:`1px solid ${hair}`, borderRadius:12, overflow:'hidden' }}>
+    <div style={{ position:'relative', width:'100%', height:340, background:bg||paper, border:`1px solid ${hair}`, borderRadius:12, overflow:'hidden' }}>
       <Ledger4AnimStyles/>
       <div style={{ position:'absolute', top:14, left:18, fontSize:10.5, letterSpacing:1.6, textTransform:'uppercase', color:faint, fontWeight:600 }}>Sources</div>
       <div style={{ position:'absolute', top:14, left:'50%', transform:'translateX(-50%)', fontSize:10.5, letterSpacing:1.6, textTransform:'uppercase', color:accent, fontWeight:700 }}>Nomio</div>
@@ -69,8 +69,8 @@ const Ledger4HeroAnim = ({ ink, paper, accent, muted, faint, hair, rule }) => {
 };
 
 /* ---------- PAIN ANIMATIONS ---------- */
-const PainManualAnim = ({ ink, paper, accent, muted, faint, hair, rule }) => (
-  <div style={{ position:'relative', width:'100%', height:140, background:paper, border:`1px solid ${hair}`, borderRadius:8, overflow:'hidden' }}>
+const PainManualAnim = ({ ink, paper, accent, muted, faint, hair, rule, bg }) => (
+  <div style={{ position:'relative', width:'100%', height:140, background:bg||paper, border:`1px solid ${hair}`, borderRadius:8, overflow:'hidden' }}>
     <Ledger4AnimStyles/>
     {/* Doc on left */}
     <div style={{ position:'absolute', left:14, top:14, bottom:14, width:60, background:paper, border:`1px solid ${rule}`, borderRadius:3 }}>
@@ -95,8 +95,8 @@ const PainManualAnim = ({ ink, paper, accent, muted, faint, hair, rule }) => (
   </div>
 );
 
-const PainTrustAnim = ({ ink, paper, accent, muted, faint, hair, rule }) => (
-  <div style={{ position:'relative', width:'100%', height:140, background:paper, border:`1px solid ${hair}`, borderRadius:8, overflow:'hidden' }}>
+const PainTrustAnim = ({ ink, paper, accent, muted, faint, hair, rule, bg, colorRed }) => (
+  <div style={{ position:'relative', width:'100%', height:140, background:bg||paper, border:`1px solid ${hair}`, borderRadius:8, overflow:'hidden' }}>
     <Ledger4AnimStyles/>
     {/* Spreadsheet rows; one row goes stale + warning icon appears */}
     <div style={{ position:'absolute', inset:14, background:paper, border:`1px solid ${rule}`, borderRadius:3 }}>
@@ -112,7 +112,7 @@ const PainTrustAnim = ({ ink, paper, accent, muted, faint, hair, rule }) => (
           <span style={{ color:muted }}>{['£500k','£2.5m','£?','£1.2m','£800k'][i]}</span>
           <span style={{ position:'relative', width:14, height:14 }}>
             {i===2 && (
-              <span style={{ position:'absolute', inset:0, color:'#C97A5A', fontSize:11, fontWeight:700, animation:'l4-warn 3.2s ease-in-out infinite', display:'flex', alignItems:'center', justifyContent:'center' }}>!</span>
+              <span style={{ position:'absolute', inset:0, color:colorRed||'#FF8985', fontSize:11, fontWeight:700, animation:'l4-warn 3.2s ease-in-out infinite', display:'flex', alignItems:'center', justifyContent:'center' }}>!</span>
             )}
           </span>
         </div>
@@ -121,8 +121,8 @@ const PainTrustAnim = ({ ink, paper, accent, muted, faint, hair, rule }) => (
   </div>
 );
 
-const PainTimeAnim = ({ ink, paper, accent, muted, faint, hair, rule }) => (
-  <div style={{ position:'relative', width:'100%', height:140, background:paper, border:`1px solid ${hair}`, borderRadius:8, overflow:'hidden' }}>
+const PainTimeAnim = ({ ink, paper, accent, muted, faint, hair, rule, bg }) => (
+  <div style={{ position:'relative', width:'100%', height:140, background:bg||paper, border:`1px solid ${hair}`, borderRadius:8, overflow:'hidden' }}>
     <Ledger4AnimStyles/>
     {/* Question */}
     <div style={{ position:'absolute', top:18, left:18, right:18, fontSize:13, color:ink, fontFamily:'"Fraunces", serif', fontStyle:'italic' }}>
@@ -149,8 +149,8 @@ const PainTimeAnim = ({ ink, paper, accent, muted, faint, hair, rule }) => (
 );
 
 /* ---------- PILLAR ANIMATIONS ---------- */
-const Ledger4ManagedAnim = ({ ink, paper, accent, muted, faint, hair, rule }) => (
-  <div style={{ position:'relative', width:'100%', height:160, background:paper, border:`1px solid ${hair}`, borderRadius:8, overflow:'hidden' }}>
+const Ledger4ManagedAnim = ({ ink, paper, accent, muted, faint, hair, rule, bg }) => (
+  <div style={{ position:'relative', width:'100%', height:160, background:bg||paper, border:`1px solid ${hair}`, borderRadius:8, overflow:'hidden' }}>
     <Ledger4AnimStyles/>
     <div style={{ position:'absolute', left:18, top:'50%', transform:'translateY(-50%)', width:64, height:48, border:`1.5px solid ${ink}`, borderRadius:4, background:paper }}>
       <div style={{ position:'absolute', top:6, left:0, right:0, textAlign:'center', fontSize:8.5, color:muted, letterSpacing:1, textTransform:'uppercase', fontWeight:700 }}>Inbox</div>
@@ -170,8 +170,8 @@ const Ledger4ManagedAnim = ({ ink, paper, accent, muted, faint, hair, rule }) =>
   </div>
 );
 
-const Ledger4AccurateAnim = ({ ink, paper, accent, muted, faint, hair, rule }) => (
-  <div style={{ position:'relative', width:'100%', height:160, background:paper, border:`1px solid ${hair}`, borderRadius:8, overflow:'hidden' }}>
+const Ledger4AccurateAnim = ({ ink, paper, accent, muted, faint, hair, rule, bg }) => (
+  <div style={{ position:'relative', width:'100%', height:160, background:bg||paper, border:`1px solid ${hair}`, borderRadius:8, overflow:'hidden' }}>
     <Ledger4AnimStyles/>
     <div style={{ position:'absolute', left:18, top:18, bottom:18, width:90, background:paper, border:`1px solid ${rule}`, borderRadius:3 }}>
       {[0,1,2,3,4,5,6].map(i=>(<div key={i} style={{ position:'absolute', top: 12 + i*12, left:8, right: 8 + (i*7)%18, height:2, background:hair }}/>))}
@@ -191,8 +191,8 @@ const Ledger4AccurateAnim = ({ ink, paper, accent, muted, faint, hair, rule }) =
   </div>
 );
 
-const Ledger4SearchableAnim = ({ ink, paper, accent, muted, faint, hair, rule }) => (
-  <div style={{ position:'relative', width:'100%', height:160, background:paper, border:`1px solid ${hair}`, borderRadius:8, overflow:'hidden' }}>
+const Ledger4SearchableAnim = ({ ink, paper, accent, muted, faint, hair, rule, bg }) => (
+  <div style={{ position:'relative', width:'100%', height:160, background:bg||paper, border:`1px solid ${hair}`, borderRadius:8, overflow:'hidden' }}>
     <Ledger4AnimStyles/>
     <div style={{ position:'absolute', top:16, left:18, right:18, height:32, background:paper, border:`1px solid ${rule}`, borderRadius:6, display:'flex', alignItems:'center', padding:'0 12px', gap:8 }}>
       <svg width="11" height="11" viewBox="0 0 11 11"><circle cx="4.5" cy="4.5" r="3.5" stroke={muted} strokeWidth="1.4" fill="none"/><path d="M7 7 L10 10" stroke={muted} strokeWidth="1.4" strokeLinecap="round"/></svg>
@@ -217,8 +217,8 @@ const Ledger4SearchableAnim = ({ ink, paper, accent, muted, faint, hair, rule })
 );
 
 /* ---------- HOW IT WORKS ANIMATIONS ---------- */
-const HowFindUploadAnim = ({ ink, paper, accent, muted, faint, hair, rule }) => (
-  <div style={{ position:'relative', width:'100%', height:130, background:paper, border:`1px solid ${hair}`, borderRadius:8, overflow:'hidden' }}>
+const HowFindUploadAnim = ({ ink, paper, accent, muted, faint, hair, rule, bg }) => (
+  <div style={{ position:'relative', width:'100%', height:130, background:bg||paper, border:`1px solid ${hair}`, borderRadius:8, overflow:'hidden' }}>
     <Ledger4AnimStyles/>
     {/* Sources stack on left */}
     <div style={{ position:'absolute', left:14, top:14, display:'flex', flexDirection:'column', gap:4 }}>
@@ -241,8 +241,8 @@ const HowFindUploadAnim = ({ ink, paper, accent, muted, faint, hair, rule }) => 
   </div>
 );
 
-const HowCalibrateAnim = ({ ink, paper, accent, muted, faint, hair, rule }) => (
-  <div style={{ position:'relative', width:'100%', height:130, background:paper, border:`1px solid ${hair}`, borderRadius:8, overflow:'hidden' }}>
+const HowCalibrateAnim = ({ ink, paper, accent, muted, faint, hair, rule, bg }) => (
+  <div style={{ position:'relative', width:'100%', height:130, background:bg||paper, border:`1px solid ${hair}`, borderRadius:8, overflow:'hidden' }}>
     <Ledger4AnimStyles/>
     {/* Doc on left */}
     <div style={{ position:'absolute', left:14, top:14, bottom:14, width:60, background:paper, border:`1px solid ${rule}`, borderRadius:3 }}>
@@ -267,8 +267,8 @@ const HowCalibrateAnim = ({ ink, paper, accent, muted, faint, hair, rule }) => (
   </div>
 );
 
-const HowMaintainAnim = ({ ink, paper, accent, muted, faint, hair, rule }) => (
-  <div style={{ position:'relative', width:'100%', height:130, background:paper, border:`1px solid ${hair}`, borderRadius:8, overflow:'hidden' }}>
+const HowMaintainAnim = ({ ink, paper, accent, muted, faint, hair, rule, bg }) => (
+  <div style={{ position:'relative', width:'100%', height:130, background:bg||paper, border:`1px solid ${hair}`, borderRadius:8, overflow:'hidden' }}>
     <Ledger4AnimStyles/>
     {/* Always-on dot */}
     <div style={{ position:'absolute', top:18, left:18, display:'flex', alignItems:'center', gap:8, fontSize:10, color:accent, fontWeight:700, letterSpacing:1, textTransform:'uppercase' }}>
@@ -316,7 +316,7 @@ const NomioProductAnim = ({ ink, paper, accent, muted, faint, hair, rule }) => {
       `}</style>
 
       {/* Inner window — sits on chrome with margin like Harvey */}
-      <div style={{ position:'absolute', inset:'48px 64px 0', background:'rgb(250, 247, 240)', borderRadius:'4px 4px 0 0', overflow:'hidden', border:`1px solid rgba(0,0,0,.1)`, borderBottom:'none' }}>
+      <div style={{ position:'absolute', inset:'48px 64px 0', background:'#faf9fa', borderRadius:'4px 4px 0 0', overflow:'hidden', border:`1px solid rgba(0,0,0,.1)`, borderBottom:'none' }}>
 
         {/* TOP BAR */}
         <div style={{ height:48, borderBottom:`1px solid ${hair}`, display:'flex', alignItems:'center', padding:'0 24px', justifyContent:'space-between', background:surface }}>

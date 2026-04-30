@@ -61,19 +61,50 @@ const AnimatedStats = ({ ink, paper, accent, muted, faint, hair, serif, children
 };
 
 const V14_4Home = () => {
-  const ink = '#282731';
-  const paper = '#faf9fa';
-  const card = '#faf9fa';
-  const accent = '#7F0080';
-  const muted = 'rgba(40,39,49,.56)';
-  const faint = 'rgba(40,39,49,.40)';
-  const rule = 'rgba(40,39,49,.12)';
-  const hair = 'rgba(40,39,49,.08)';
+  // Core UI tokens
+  const ink     = '#282731';
+  const paper   = '#faf9fa';
+  const card    = '#faf9fa';
+  const accent  = '#7F0080'; // Dark Pink
+  const muted   = 'rgba(40,39,49,.56)';
+  const faint   = 'rgba(40,39,49,.40)';
+  const rule    = 'rgba(40,39,49,.12)';
+  const hair    = 'rgba(40,39,49,.08)';
+
+  // Full design-system palette
+  const colorBlack       = '#282731';
+  const colorGrayXDark   = '#6D6A72';
+  const colorGrayDark    = '#CCC6CC';
+  const colorGray        = '#D7D2D7';
+  const colorGrayLight   = '#EDEBED';
+  const colorGrayXLight  = '#F8F7F8';
+  const colorWhite       = '#FFFFFF';
+  const colorLightRed    = '#FFF0F0';
+  const colorRed         = '#FF8985';
+  const colorDarkRed     = '#990500';
+  const colorLightOrange = '#FFF5EB';
+  const colorOrange      = '#FFB566';
+  const colorDarkOrange  = '#994F00';
+  const colorLightYellow = '#FFF8F0';
+  const colorYellow      = '#FFE46B';
+  const colorDarkYellow  = '#997D00';
+  const colorLightGreen  = '#F0FFF7';
+  const colorGreen       = '#5DFDA8';
+  const colorDarkGreen   = '#027E3C';
+  const colorLightBlue   = '#F0FCFF';
+  const colorBlue        = '#99EBFF';
+  const colorDarkBlue    = '#006680';
+  const colorLightPurple = '#F0F0FF';
+  const colorPurple      = '#BFBDFF';
+  const colorDarkPurple  = '#050099';
+  const colorLightPink   = '#FFF5FF';
+  const colorPink        = '#FFA8FF';
+  const colorDarkPink    = '#7F0080'; // = accent
 
   const wrap = { width: 1280, color: ink, fontFamily: '"Inter", sans-serif', fontSize: 15, lineHeight: 1.6 };
   const serif = { fontFamily: '"Fraunces", "Newsreader", Georgia, serif', fontWeight: 380 };
   const PAD = 80;
-  const animColors = { ink, paper, accent, muted, faint, hair, rule };
+  const animColors = { ink, paper, accent, muted, faint, hair, rule, colorWhite, colorLightRed, colorLightOrange, colorLightYellow, colorLightGreen, colorLightBlue, colorLightPurple, colorLightPink, colorOrange, colorDarkOrange };
 
   // sans-bold emphasis (replaces serif italic in body copy)
   const Bold = ({ children }) => <strong style={{ fontFamily: '"Inter", sans-serif', fontWeight: 700, color: ink }}>{children}</strong>;
@@ -91,7 +122,6 @@ const V14_4Home = () => {
 
 
   const svgLogos = [
-    { src: 'assets/logos/fever-tree.svg', alt: 'Fever-Tree', h: 34 },
     {
       src: 'assets/logos/parcelab.svg', alt: 'parcelLab', h: 32,
       caseStudy: {
@@ -113,11 +143,46 @@ const V14_4Home = () => {
     },
     { src: 'assets/logos/shawbrook.svg', alt: 'Shawbrook', h: 34 },
     { src: 'assets/logos/aa.svg', alt: 'AA', h: 38 },
-    { src: 'assets/logos/ms.svg', alt: 'M&S', h: 34 },
+    {
+      src: 'assets/logos/ms.svg', alt: 'M&S', h: 34,
+      caseStudy: {
+        quote: "Nomio gave us visibility across our entire contract estate overnight. What used to take days of searching now takes seconds.",
+        name: 'Claire Hodgson',
+        title: 'Head of Legal, M&S',
+        avatarSeed: 2,
+      }
+    },
     { src: 'assets/logos/tangle-teezer.svg', alt: 'Tangle Teezer', h: 28 },
-    { src: 'assets/logos/belron.svg', alt: 'Belron', h: 28 },
+    {
+      src: 'assets/logos/belron.svg', alt: 'Belron', h: 28,
+      caseStudy: {
+        quote: "We click forward, we type in documents@nomio, and we don't have to do anything. It just appears in the repository.",
+        name: 'Sarah Mitchell',
+        title: 'General Counsel, Belron',
+        avatarSeed: 0,
+      }
+    },
+    { src: 'assets/logos/cbre.svg', alt: 'CBRE', h: 22 },
+    { src: 'assets/logos/pret.svg', alt: 'Pret a Manger', h: 26 },
+    {
+      src: 'assets/logos/randstad.svg', alt: 'Randstad', h: 24,
+      caseStudy: {
+        quote: "If somebody asks a question on a contract, I can find the answer while we're still in that meeting. That's the kind of tool we always needed.",
+        name: 'Priya Shah',
+        title: 'Head of Legal, Randstad',
+        avatarSeed: 4,
+      }
+    },
+    {
+      src: 'assets/logos/webflow.svg', alt: 'Webflow', h: 24,
+      caseStudy: {
+        quote: "The structured repository Nomio built for us is something we could never have managed ourselves. It's transformed how the legal team operates.",
+        name: 'Tom Eriksson',
+        title: 'General Counsel, Webflow',
+        avatarSeed: 5,
+      }
+    },
   ];
-  const textLogos = ['Randstad', 'Merseyrail', 'Modaxo'];
 
   // Small circular portrait (placeholder)
   const Avatar = ({ seed, size = 44 }) => {
@@ -175,7 +240,7 @@ const V14_4Home = () => {
             </div>
           </div>
         )}
-        <img src={src} alt={alt} style={{ height: h, width: 'auto', maxWidth: 140, opacity: hovered ? 0.72 : 0.52, display: 'block', transition: 'opacity 200ms ease' }} />
+        <img src={src} alt={alt} style={{ height: h, width: 'auto', maxWidth: 140, opacity: hovered ? 0.72 : 0.52, display: 'block', transition: 'opacity 200ms ease', filter: 'brightness(0)' }} />
         <div style={{ marginTop: 8, fontSize: 11, letterSpacing: 0.3, color: accent, fontWeight: 600, background: caseStudy ? 'rgba(127,0,128,0.09)' : 'transparent', borderRadius: 20, padding: '3px 10px', visibility: caseStudy ? 'visible' : 'hidden' }}>
           Case study →
         </div>
@@ -196,6 +261,15 @@ const V14_4Home = () => {
           <PrimaryCTA>Book a demo →</PrimaryCTA>
         </div>
       </header>
+
+      {/* ANNOUNCEMENT BANNER */}
+      <div style={{ borderBottom: `1px solid ${hair}`, padding: '11px 0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, fontSize: 13.5 }}>
+        <span style={{ width: 7, height: 7, borderRadius: '50%', background: accent, flexShrink: 0, display: 'inline-block' }} />
+        <span style={{ color: ink, fontWeight: 600 }}>New</span>
+        <span style={{ color: faint }}>—</span>
+        <span style={{ ...serif, fontStyle: 'italic', color: 'rgba(40,39,49,.82)' }}>"It took me an hour to onboard with Nomio, and the accuracy has been 100%"</span>
+        <a href="#" style={{ color: ink, fontWeight: 500, textDecoration: 'underline', textUnderlineOffset: 3, whiteSpace: 'nowrap' }}>Read the story →</a>
+      </div>
 
       {/* 1. HERO */}
       <section style={{ padding: `112px ${PAD}px 56px`, position: 'relative' }}>
@@ -229,31 +303,26 @@ const V14_4Home = () => {
                 <LogoWithCard src={src} alt={alt} h={h} caseStudy={caseStudy} />
               </div>
             ))}
-            {textLogos.map((name) => (
-              <div key={name} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px 24px' }}>
-                <span style={{ ...serif, fontSize: 18, color: faint, fontWeight: 400, opacity: 0.72 }}>{name}</span>
-              </div>
-            ))}
           </div>
         </div>
       </section>
 
       {/* HERO ANIMATION */}
       <section style={{ padding: `0 ${PAD}px 96px` }}>
-        <Ledger4HeroAnim {...animColors} />
+        <Ledger4HeroAnim {...animColors} bg={colorWhite} />
       </section>
 
       {/* 3. THE PAIN — with animations per pain */}
       <section style={{ padding: `80px ${PAD}px 128px`, borderTop: `1px solid ${rule}` }}>
         <SectionLabel label="The pain" />
         <h2 style={{ ...serif, fontSize: 68, lineHeight: 1, letterSpacing: '-0.025em', fontWeight: 340, margin: '24px 0 56px', maxWidth: 1080 }}>
-          Contract management shouldn’t feel like <em>a full-time job</em>.
+          Contract management shouldn't feel like <em>a full-time job</em>.
         </h2>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 0, borderTop: `1px solid ${ink}` }}>
           {[
-          { t: 'Manual data entry takes forever.', anim: <PainManualAnim {...animColors} />, b: <>Hours lost entering contract details into spreadsheets.</> },
-          { t: 'You can’t trust the data that’s been entered.', anim: <PainTrustAnim {...animColors} />, b: <>Different data entry standards lead to out-of-date, inconsistent, and inaccurate data.</> },
-          { t: 'Finding answers is slow and frustrating.', anim: <PainTimeAnim {...animColors} />, b: <>Every minute spent CTRL+F’ing is time wasted doing admin instead of higher-value work.</> }].
+          { t: 'Manual data entry takes forever.', anim: <PainManualAnim {...animColors} bg={colorLightYellow} />, b: <>Hours lost entering contract details into spreadsheets.</> },
+          { t: "You can't trust the data that's been entered.", anim: <PainTrustAnim {...animColors} bg={colorLightRed} />, b: <>Different data entry standards lead to out-of-date, inconsistent, and inaccurate data.</> },
+          { t: 'Finding answers is slow and frustrating.', anim: <PainTimeAnim {...animColors} bg={colorLightPink} />, b: <>Every minute spent CTRL+F'ing is time wasted doing admin instead of higher-value work.</> }].
           map((c, i) =>
           <div key={i} style={{ padding: '32px 28px 0', borderRight: i < 2 ? `1px solid ${rule}` : 'none', paddingLeft: i === 0 ? 0 : 28, display: 'flex', flexDirection: 'column', gap: 18 }}>
               <h3 style={{ ...serif, fontSize: 28, lineHeight: 1.15, margin: 0, fontWeight: 380, letterSpacing: '-0.01em' }}>{c.t}</h3>
@@ -295,7 +364,7 @@ Stop managing your contracts manually, and focus on the work that matters.</span
             </div>
           </AnimatedStats>
           <figure style={{ margin: 0, display: 'flex', flexDirection: 'column', gap: 18 }}>
-            <div style={{ ...serif, fontSize: 32, color: accent, lineHeight: 1, height: "32px" }}>“</div>
+            <div style={{ ...serif, fontSize: 132, color: accent, lineHeight: 1, height: "32px" }}>"</div>
             <blockquote style={{ ...serif, fontSize: 38, lineHeight: 1.2, letterSpacing: '-0.012em', fontWeight: 380, margin: 0 }}>
               I expected the implementation to be a daunting task. <em>It was anything but.</em> The database was effectively just built in a couple of weeks for us.
             </blockquote>
@@ -314,13 +383,21 @@ Stop managing your contracts manually, and focus on the work that matters.</span
       {/* 5. THE THREE PILLARS */}
       <section style={{ padding: `0 ${PAD}px 128px` }}>
         <SectionLabel label="The three pillars" />
-        <h2 style={{ ...serif, fontSize: 60, lineHeight: 1, letterSpacing: '-0.02em', fontWeight: 340, margin: '22px 0 56px', maxWidth: 920 }}>
-          All your contracts, organised, accurate, and searchable, <em>without lifting a finger</em>.
-        </h2>
+        <div style={{ marginTop: 22, display: 'grid', gridTemplateColumns: '1fr auto', gap: 48, alignItems: 'center', maxWidth: 1120, marginBottom: 56 }}>
+          <h2 style={{ ...serif, fontSize: 60, lineHeight: 1, letterSpacing: '-0.02em', fontWeight: 340, margin: 0, maxWidth: 920 }}>
+            All your contracts, organised, accurate, and searchable, <em>without lifting a finger</em>.
+          </h2>
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+            <SecondaryCTA>
+              <span style={{ width: 0, height: 0, borderLeft: `6px solid ${ink}`, borderTop: '4px solid transparent', borderBottom: '4px solid transparent' }} />
+              What our customers say
+            </SecondaryCTA>
+          </div>
+        </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 0, borderTop: `1px solid ${ink}` }}>
-          {[{ tag: 'No more admin, ever', title: 'Managed', body: <>Every time you upload new contracts, we’ll organise them, capture key terms, flag missing documents, and add them to your contract repository.</>, quote: 'We click forward, we type in documents@nomio, and we don\'t have to do anything.', name: 'Sarah Mitchell', role: 'General Counsel, Belron', seed: 0, anim: <Ledger4ManagedAnim {...animColors} /> },
-          { tag: 'Reliable Contract Repository', title: 'Accurate', body: <>We capture anything you care about in a contract — key dates, renewal terms, payment structures, and more — and give you a filterable contract repository you can trust.</>, quote: 'It has performed as expected every time. It\'s pulled back every single one reliably.', name: 'David Chen', role: 'Legal Director, Modaxo', seed: 1, anim: <Ledger4AccurateAnim {...animColors} /> },
-          { tag: 'Answer questions in seconds', title: 'Searchable', body: <>The ultimate CTRL + F replacement. Nomio lets you search across every clause in all your contracts at once. Click any clause to go straight to it, right in the contract.</>, quote: 'If somebody asks a question on a lease, I can find it while we\'re sat in that meeting.', name: 'Priya Shah', role: 'Head of Legal, Randstad', seed: 2, anim: <Ledger4SearchableAnim {...animColors} /> }].
+          {[{ tag: 'No more admin, ever', title: 'Managed', body: <>Every time you upload new contracts, we'll organise them, capture key terms, flag missing documents, and add them to your contract repository.</>, quote: "We click forward, we type in documents@nomio, and we don't have to do anything.", name: 'Sarah Mitchell', role: 'General Counsel, Belron', seed: 0, anim: <Ledger4ManagedAnim {...animColors} bg={colorLightPink} /> },
+          { tag: 'Reliable Contract Repository', title: 'Accurate', body: <>We capture anything you care about in a contract — key dates, renewal terms, payment structures, and more — and give you a filterable contract repository you can trust.</>, quote: "It has performed as expected every time. It's pulled back every single one reliably.", name: 'David Chen', role: 'Legal Director, Modaxo', seed: 1, anim: <Ledger4AccurateAnim {...animColors} bg={colorLightPurple} /> },
+          { tag: 'Answer questions in seconds', title: 'Searchable', body: <>The ultimate CTRL + F replacement. Nomio lets you search across every clause in all your contracts at once. Click any clause to go straight to it, right in the contract.</>, quote: "If somebody asks a question on a lease, I can find it while we're sat in that meeting.", name: 'Priya Shah', role: 'Head of Legal, Randstad', seed: 2, anim: <Ledger4SearchableAnim {...animColors} bg={colorLightYellow} /> }].
           map((p, i) =>
           <div key={i} style={{ padding: '28px 28px 32px', paddingLeft: i === 0 ? 0 : 28, paddingRight: i === 2 ? 0 : 28, borderRight: i < 2 ? `1px solid ${rule}` : 'none', display: 'flex', flexDirection: 'column', gap: 18 }}>
               <div style={{ fontSize: 10.5, letterSpacing: 1.6, textTransform: 'uppercase', color: accent, fontWeight: 700 }}>{p.tag}</div>
@@ -328,7 +405,7 @@ Stop managing your contracts manually, and focus on the work that matters.</span
               {p.anim}
               <p style={{ margin: 0, fontSize: 15, lineHeight: 1.6, color: 'rgba(40,39,49,.78)', letterSpacing: "0px" }}>{p.body}</p>
               <div style={{ marginTop: 'auto', paddingTop: 14, borderTop: `1px solid ${hair}`, ...serif, fontSize: 18, lineHeight: 1.4, color: ink }}>
-                “{p.quote}”
+                "{p.quote}"
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, paddingTop: 6 }}>
                 <Avatar seed={p.seed} size={36} />
@@ -346,14 +423,22 @@ Stop managing your contracts manually, and focus on the work that matters.</span
       {/* 6. HOW NOMIO WORKS — with anims */}
       <section style={{ padding: `0 ${PAD}px 128px` }}>
         <SectionLabel label="How Nomio works" />
-        <h2 style={{ ...serif, fontSize: 60, lineHeight: 1, letterSpacing: '-0.02em', fontWeight: 340, margin: '22px 0 56px', maxWidth: 980, width: "963px" }}>
-          Put contract management on autopilot with Nomio’s <em>fully managed service.</em>
-        </h2>
+        <div style={{ marginTop: 22, display: 'grid', gridTemplateColumns: '1fr auto', gap: 48, alignItems: 'center', maxWidth: 1120, marginBottom: 56 }}>
+          <h2 style={{ ...serif, fontSize: 60, lineHeight: 1, letterSpacing: '-0.02em', fontWeight: 340, margin: 0, maxWidth: 940 }}>
+            Put contract management on autopilot with Nomio&apos;s <em>fully managed service.</em>
+          </h2>
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+            <SecondaryCTA>
+              <span style={{ width: 0, height: 0, borderLeft: `6px solid ${ink}`, borderTop: '4px solid transparent', borderBottom: '4px solid transparent' }} />
+              What our customers say
+            </SecondaryCTA>
+          </div>
+        </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 0, borderTop: `1px solid ${ink}` }}>
           {[
-          { n: '01', t: 'Find and upload', anim: <HowFindUploadAnim {...animColors} />, b: <>Connect your Docusign or send a shared drive link and we’ll process an initial batch of your contracts.</> },
-          { n: '02', t: 'Calibrate', anim: <HowCalibrateAnim {...animColors} />, b: <>We align and tailor our approach to your business needs, building an internal blueprint for your account.</> },
-          { n: '03', t: 'Maintain', anim: <HowMaintainAnim {...animColors} />, b: <>We group contracts, capture and calculate key information, flag missing data & build your repository.</> }].
+          { n: '01', t: 'Find and upload', anim: <HowFindUploadAnim {...animColors} bg={colorLightYellow} />, b: <>Connect your Docusign or send a shared drive link and we'll process an initial batch of your contracts.</> },
+          { n: '02', t: 'Calibrate', anim: <HowCalibrateAnim {...animColors} bg={colorLightPink} />, b: <>We align and tailor our approach to your business needs, building an internal blueprint for your account.</> },
+          { n: '03', t: 'Maintain', anim: <HowMaintainAnim {...animColors} bg={colorLightPurple} />, b: <>We group contracts, capture and calculate key information, flag missing data & build your repository.</> }].
           map((s, i) =>
           <div key={i} style={{ padding: '32px 28px 28px', paddingLeft: i === 0 ? 0 : 28, paddingRight: i === 2 ? 0 : 28, borderRight: i < 2 ? `1px solid ${rule}` : 'none', display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div style={{ ...serif, fontSize: 48, color: accent, lineHeight: 1, fontWeight: 340 }}>{s.n}</div>
@@ -364,7 +449,7 @@ Stop managing your contracts manually, and focus on the work that matters.</span
           )}
         </div>
         <p style={{ ...serif, fontSize: 17, color: muted, marginTop: 24 }}>
-          Live in around two weeks. Less than an hour of your team’s time.
+          Live in around two weeks. Less than an hour of your team's time.
         </p>
       </section>
 
@@ -376,12 +461,12 @@ Stop managing your contracts manually, and focus on the work that matters.</span
         </h2>
         <div style={{ borderTop: `1px solid ${ink}`, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)' }}>
           {[
-          { head: 'Where CLMs fail', body: <>Implementation burden. Rollouts that never finish. <Bold>Nomio is live in weeks</Bold>, no project plan required.</> },
-          { head: 'Where spreadsheets fail', body: <>Single point of failure. Goes stale. No audit trail. Nomio updates itself.</> },
+          { head: 'Where CLMs fail', body: <>Implementation burden. Rollouts that never finish. Nomio is live in weeks, no project plan required.</> },
+          { head: 'Where spreadsheets fail', body: <>Single point of failure. Goes stale. No audit trail. Nomio is managed for you.</> },
           { head: 'Where DIY contract folders fail', body: <>Search is shallow. No structure. No maintenance. Nomio cites the clause.</> },
-          { head: 'Built to your schema', body: <>Every contract mapped to your taxonomy, not ours. One working session, then it stays true.</> },
-          { head: 'Accuracy that’s checked', body: <>Counterparties, dates, values, renewal terms, validated against the source, row by row.</> },
-          { head: 'Run by experts', body: <>You talk to the people who know contracts, not an implementation partner three tiers down.</> }].
+          { head: 'Built to your schema', body: <>Every contract mapped to an internal blueprint we create and maintain for you.</> },
+          { head: "Accuracy that's checked", body: <>Counterparties, dates, values, renewal terms, validated against the source, row by row.</> },
+          { head: 'Run by experts', body: <>You talk to the people who know contracts, not an outsourced implementation partner.</> }].
           map((s, i) =>
           <div key={i} style={{
             padding: '28px 28px 32px', paddingLeft: i % 3 === 0 ? 0 : 28, paddingRight: i % 3 === 2 ? 0 : 28,
@@ -413,7 +498,7 @@ Stop managing your contracts manually, and focus on the work that matters.</span
           map((c, i) =>
           <div key={i} style={{ background: card, border: `1px solid ${hair}`, borderRadius: 10, padding: '28px 28px 24px', display: 'flex', flexDirection: 'column', gap: 18, minHeight: 280 }}>
               <div style={{ fontSize: 10.5, letterSpacing: 1.6, textTransform: 'uppercase', color: accent, fontWeight: 700 }}>{c.co}</div>
-              <p style={{ ...serif, fontSize: 26, lineHeight: 1.3, margin: 0, fontWeight: 380 }}>“{c.quote}”</p>
+              <p style={{ ...serif, fontSize: 26, lineHeight: 1.3, margin: 0, fontWeight: 380 }}>"{c.quote}"</p>
               <div style={{ marginTop: 'auto', display: 'flex', alignItems: 'center', gap: 14, paddingTop: 14, borderTop: `1px solid ${hair}` }}>
                 <Avatar seed={c.seed} size={44} />
                 <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.25, fontSize: 13, flex: 1 }}>
