@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Nomio - Search</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --black: #282731;
+    --gray-xdark: #6D6A72;
+    --gray-dark: #CCC6CC;
+    --gray: #D7D2D7;
+    --gray-light: #EDEBED;
+    --gray-xlight: #F8F7F8;
+    --yellow: #FFE46B;
+    --light-pink: #FFF5FF;
+    --pink: #FFA8FF;
+    --white: #FFFFFF;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: 100%; height: 100%;
+    background: var(--white);
+    font-family: 'Inter Tight', system-ui, -apple-system, sans-serif;
+    color: var(--black);
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+  body { display: flex; align-items: center; justify-content: center; }
+
+  .canvas-wrap { width: 512px; height: 580px; position: relative; transform-origin: center; }
+  .canvas { position: absolute; inset: 0; background: var(--light-pink); border-radius: 12px; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+
+  .ui {
+    width: 448px; height: 516px;
+    background: var(--white); border: 1px solid var(--gray-light); border-radius: 10px;
+    padding: 28px 28px 0 28px;
+    position: relative; overflow: hidden;
+    display: flex; flex-direction: column;
+  }
+
+  .search-row { display: flex; align-items: center; justify-content: center; margin-bottom: 14px; }
+  .search {
+    position: relative; width: 100%; max-width: 320px;
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 10px; border: 1px solid transparent; border-radius: 6px;
+    transition: border-color 180ms ease-in-out;
+  }
+  .search.focused { border-color: var(--black); }
+  .search-icon { width: 14px; height: 14px; color: var(--gray-xdark); flex: 0 0 14px; display: block; }
+  .search-text { flex: 1 1 auto; font-size: 14px; line-height: 1.2; color: var(--black); min-width: 0; white-space: nowrap; overflow: hidden; display: flex; align-items: center; height: 16px; }
+  .search-text.placeholder { color: var(--gray-xdark); }
+  .caret { display: inline-block; width: 1px; height: 14px; background: var(--black); margin-left: 1px; opacity: 0; vertical-align: middle; }
+  .caret.blinking { animation: caretBlink 1s steps(1) infinite; }
+  @keyframes caretBlink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
+  .search-dots { width: 14px; height: 14px; color: var(--gray-xdark); flex: 0 0 14px; opacity: 0; transition: opacity 200ms ease-in-out; }
+  .search.focused .search-dots { opacity: 1; }
+
+  .pulse-ring { position: absolute; inset: -2px; border-radius: 8px; border: 2px solid var(--gray-dark); pointer-events: none; opacity: 0; }
+  .pulse-ring.on { animation: pulseRing 1.2s ease-in-out infinite; }
+  @keyframes pulseRing { 0%, 100% { opacity: 0; transform: scale(1); } 50% { opacity: 0.9; transform: scale(1.02); } }
+
+  .toggle-row { display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 11px; color: var(--gray-xdark); padding-bottom: 12px; border-bottom: 1px solid var(--gray-light); }
+  .toggle-row .label { color: var(--gray-xdark); }
+  .toggle-row .opt { color: var(--gray-xdark); text-decoration: none; border-bottom: 1px solid transparent; padding-bottom: 1px; cursor: default; }
+  .toggle-row .opt.active { color: var(--black); font-weight: 600; border-bottom-color: var(--black); }
+
+  .results { flex: 1 1 auto; overflow: hidden; padding-top: 14px; position: relative; }
+  .result { padding-bottom: 14px; margin-bottom: 14px; border-bottom: 1px solid var(--gray-light); opacity: 0; transform: translateY(12px); transition: opacity 360ms ease-in-out, transform 360ms ease-in-out; }
+  .result:last-child { border-bottom: none; }
+  .result.show { opacity: 1; transform: translateY(0); }
+  .result.exit  { opacity: 0; transform: translateY(12px); }
+
+  .result-id { font-size: 9.5px; color: var(--gray-xdark); letter-spacing: 0.2px; margin-bottom: 4px; }
+  .clause-tag { display: inline-block; background: var(--light-pink); border: 1px solid var(--pink); color: var(--black); font-size: 9px; font-weight: 500; padding: 2px 6px; border-radius: 3px; margin-bottom: 6px; }
+  .clause-num { font-size: 10.5px; color: var(--black); margin-bottom: 3px; font-weight: 500; }
+  .clause-body { font-size: 10.5px; line-height: 1.45; color: var(--black); text-wrap: pretty; }
+  .clause-body mark { background: var(--yellow); color: var(--black); padding: 0 1px; border-radius: 1px; }
+
+  .cursor { position: absolute; z-index: 50; pointer-events: none; will-change: transform; transition: transform 760ms cubic-bezier(.4,0,.2,1); }
+  .cursor svg { display: block; }
+  .cursor.arrow svg.ibeam, .cursor.ibeam svg.arrow { display: none; }
+
+  *:focus { outline: none; }
+
+  @media (max-width: 540px) { .canvas-wrap { transform: scale(calc((100vw - 16px) / 512)); } }
+  @media (max-height: 600px) { .canvas-wrap { transform: scale(calc((100vh - 16px) / 580)); } }
+</style>
+</head>
+<body>
+
+<div class="canvas-wrap" id="canvas-wrap">
+  <div class="canvas">
+    <div class="ui" id="ui">
+
+      <div class="search-row">
+        <div class="search" id="search">
+          <span class="pulse-ring" id="pulse-ring"></span>
+          <svg class="search-icon" viewBox="0 0 14 14" fill="none">
+            <circle cx="6" cy="6" r="4.2" stroke="currentColor" stroke-width="1.2"/>
+            <path d="M9.2 9.2L12 12" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+          </svg>
+          <div class="search-text placeholder" id="search-text">
+            <span id="search-typed"></span><span class="caret" id="caret"></span><span id="search-placeholder">Search clauses</span>
+          </div>
+          <svg class="search-dots" viewBox="0 0 14 14" fill="currentColor">
+            <circle cx="3" cy="7" r="1.1"/>
+            <circle cx="7" cy="7" r="1.1"/>
+            <circle cx="11" cy="7" r="1.1"/>
+          </svg>
+        </div>
+      </div>
+
+      <div class="toggle-row">
+        <span class="label">Searching:</span>
+        <span class="opt">Agreements</span>
+        <span class="opt">Timeline</span>
+        <span class="opt active">Clauses</span>
+      </div>
+
+      <div class="results" id="results"></div>
+
+    </div>
+
+    <div class="cursor arrow" id="cursor" style="transform: translate(420px, 540px);">
+      <svg class="arrow" width="18" height="22" viewBox="0 0 18 22" fill="none">
+        <path d="M2 1.5L2 17.5L6 14L8.5 19.5L11 18.5L8.5 13L13 13L2 1.5Z" fill="white" stroke="#282731" stroke-width="1.2" stroke-linejoin="round"/>
+      </svg>
+      <svg class="ibeam" width="14" height="22" viewBox="0 0 14 22" fill="none" style="margin-left:-7px; margin-top:-11px;">
+        <path d="M3 2H11 M3 20H11 M7 2V20" stroke="#282731" stroke-width="1.6" stroke-linecap="round"/>
+        <path d="M3 2H11 M3 20H11" stroke="#FFFFFF" stroke-width="0.6" stroke-linecap="round"/>
+      </svg>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const $  = (s, r=document) => r.querySelector(s);
+const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
+const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+
+function highlight(text, terms) {
+  if (!terms || !terms.length) return text;
+  const re = new RegExp('(' + terms.map(t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|') + ')', 'gi');
+  return text.replace(re, '<mark>$1</mark>');
+}
+
+const RESULTS_TERMINATION = [
+  { key: 'apex-5.1', id: 'IC-18 / Apex - Master Terms / Master V2', tag: 'Termination Notice Period', num: '5.1.', body: 'Termination for Convenience: Either Party may terminate this Agreement for convenience at any point with 90 days notice to the other.' },
+  { key: 'apex-5.2', id: 'IC-18 / Apex - Master Terms / Master V2', tag: null, num: '5.2.', body: 'Termination for Cause: If either Party materially breaches its duties or obligations under this Agreement, and the breach is not cured within thirty (30) days...' },
+  { key: 'pothos-9.3.4.3', id: 'IC-05 / Pothos - Master Services Agreement', tag: null, num: '9.3.4.3.', body: 'Termination of this Agreement shall not relieve Customer of its obligation to pay any outstanding fees or charges...' },
+  { key: 'apex-9.1', id: 'IC-25 / Apex - Cloud Indirect Tax Services Offering Terms', tag: null, num: '9.1.', body: 'Termination for Breach: If either party materially breaches any of its duties or obligations under these Offering Terms...' },
+];
+
+const RESULTS_TERM_CONV = [
+  { key: 'apex-5.1', id: 'IC-18 / Apex - Master Terms / Master V2', tag: 'Termination Notice Period', num: '5.1.', body: 'Termination for Convenience: Either Party may terminate this Agreement for convenience at any point with 90 days notice to the other.' },
+  { key: 'pothos-conv', id: 'IC-05 / Pothos - Master Services Agreement', tag: 'Termination Notice Period', num: '9.3.1.', body: 'Either party may terminate this Agreement for any reason or no reason upon 180 days’ prior written notice to the other party.' },
+  { key: 'strattech-conv', id: 'IC-32 / StratTech Solutions - Master Terms', tag: 'Termination Notice Period', num: '8.2.', body: 'Either party may terminate this Agreement for any reason or no reason upon 45 days’ prior written notice to the other party.' },
+  { key: 'cloudpulse-conv', id: 'IC-27 / CloudPulse Innovations - Master Services Agreement', tag: 'Termination Notice Period', num: '3.', body: 'Termination for Convenience During the Initial Subscription Term: Infinity may terminate this Agreement with such termination to be effective from...' },
+];
+
+const TERMS_1 = ['termination', 'terminate', 'terminating'];
+const TERMS_2 = ['termination', 'terminate', 'terminating', 'convenience'];
+
+const resultsEl = $('#results');
+const searchEl = $('#search');
+const pulseRing = $('#pulse-ring');
+const typedEl = $('#search-typed');
+const placeholderEl = $('#search-placeholder');
+const searchTextWrap = $('#search-text');
+const caret = $('#caret');
+const cursor = $('#cursor');
+
+function renderResultEl(data, terms) {
+  const wrap = document.createElement('div');
+  wrap.className = 'result';
+  wrap.dataset.key = data.key;
+  const idEl = document.createElement('div');
+  idEl.className = 'result-id';
+  idEl.textContent = data.id;
+  wrap.appendChild(idEl);
+  if (data.tag) { const t = document.createElement('div'); t.className = 'clause-tag'; t.textContent = data.tag; wrap.appendChild(t); }
+  const num = document.createElement('div');
+  num.className = 'clause-num';
+  num.textContent = data.num;
+  wrap.appendChild(num);
+  const body = document.createElement('div');
+  body.className = 'clause-body';
+  body.innerHTML = highlight(data.body, terms);
+  wrap.appendChild(body);
+  return wrap;
+}
+
+function clearResults() { resultsEl.innerHTML = ''; }
+
+async function staggerInResults(dataList, terms, stagger=150) {
+  clearResults();
+  const els = dataList.map(d => { const el = renderResultEl(d, terms); resultsEl.appendChild(el); return el; });
+  for (let i = els.length - 1; i >= 0; i--) {
+    setTimeout(() => els[i].classList.add('show'), (els.length - 1 - i) * stagger);
+  }
+  await sleep((els.length - 1) * stagger + 360);
+}
+
+async function reshuffleToTermConv() {
+  const existing = $$('.result', resultsEl);
+  const keep = existing.find(el => el.dataset.key === 'apex-5.1');
+  existing.forEach(el => { if (el !== keep) el.classList.add('exit'); });
+  if (keep) {
+    const body = keep.querySelector('.clause-body');
+    body.innerHTML = highlight(RESULTS_TERM_CONV[0].body, TERMS_2);
+    if (!keep.querySelector('.clause-tag')) {
+      const t = document.createElement('div');
+      t.className = 'clause-tag';
+      t.textContent = RESULTS_TERM_CONV[0].tag;
+      keep.insertBefore(t, keep.querySelector('.clause-num'));
+    }
+  }
+  await sleep(380);
+  existing.forEach(el => { if (el !== keep) el.remove(); });
+  if (keep && resultsEl.firstChild !== keep) resultsEl.insertBefore(keep, resultsEl.firstChild);
+  const newOnes = RESULTS_TERM_CONV.slice(1);
+  const newEls = newOnes.map(d => { const el = renderResultEl(d, TERMS_2); resultsEl.appendChild(el); return el; });
+  for (let i = newEls.length - 1; i >= 0; i--) {
+    setTimeout(() => newEls[i].classList.add('show'), (newEls.length - 1 - i) * 150);
+  }
+  await sleep((newEls.length - 1) * 150 + 360);
+}
+
+function moveCursor(x, y, dur=760) {
+  cursor.style.transition = `transform ${dur}ms cubic-bezier(.4,0,.2,1)`;
+  cursor.style.transform = `translate(${x}px, ${y}px)`;
+}
+
+function setCursorMode(mode) { cursor.classList.remove('arrow', 'ibeam'); cursor.classList.add(mode); }
+
+async function typeChars(str, perChar=90) {
+  for (const ch of str) { typedEl.textContent += ch; await sleep(perChar); }
+}
+
+function clearTyped() { typedEl.textContent = ''; }
+
+function showPlaceholder(visible) {
+  placeholderEl.style.display = visible ? 'inline' : 'none';
+  searchTextWrap.classList.toggle('placeholder', visible);
+}
+
+let aborted = false;
+
+async function loopOnce() {
+  if (aborted) return;
+  clearResults();
+  clearTyped();
+  showPlaceholder(true);
+  searchEl.classList.remove('focused');
+  pulseRing.classList.add('on');
+  caret.classList.remove('blinking');
+  caret.style.opacity = 0;
+  setCursorMode('arrow');
+  cursor.style.transition = 'none';
+  cursor.style.transform = 'translate(420px, 540px)';
+  void cursor.offsetWidth;
+
+  await sleep(1500);
+  if (aborted) return;
+
+  const searchCx = 256;
+  const searchCy = 76;
+  moveCursor(searchCx + 30, searchCy - 4, 500);
+  await sleep(450);
+  setCursorMode('ibeam');
+  await sleep(50);
+  if (aborted) return;
+
+  pulseRing.classList.remove('on');
+  searchEl.classList.add('focused');
+  caret.classList.add('blinking');
+  showPlaceholder(false);
+  await sleep(200);
+  if (aborted) return;
+
+  await typeChars('termination', 90);
+  if (aborted) return;
+  await sleep(80);
+
+  await staggerInResults(RESULTS_TERMINATION, TERMS_1, 150);
+  if (aborted) return;
+
+  await sleep(500);
+
+  await typeChars(' convenience', 83);
+  if (aborted) return;
+
+  await reshuffleToTermConv();
+  if (aborted) return;
+
+  await sleep(700);
+  resultsEl.style.transition = 'opacity 280ms ease-in-out';
+  resultsEl.style.opacity = '0';
+  searchEl.classList.remove('focused');
+  caret.classList.remove('blinking');
+  caret.style.opacity = 0;
+  await sleep(280);
+
+  resultsEl.style.transition = 'none';
+  resultsEl.style.opacity = '1';
+}
+
+async function runForever() {
+  while (!aborted) {
+    try { await loopOnce(); } catch (e) { console.error(e); await sleep(500); }
+  }
+}
+
+runForever();
+</script>
+</body>
+</html>

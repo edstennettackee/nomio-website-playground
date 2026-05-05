@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Nomio - Accurate</title>
+<style>
+  :root {
+    --black: #282731;
+    --gray-xdark: #6D6A72;
+    --gray-dark: #CCC6CC;
+    --gray: #D7D2D7;
+    --gray-light: #EDEBED;
+    --gray-xlight: #F8F7F8;
+    --light-yellow: #FFF8F0;
+    --yellow: #FFD37A;
+    --light-pink: #FFF5FF;
+    --pink: #FFA8FF;
+    --light-green: #E5F5E5;
+    --green: #4FA46A;
+    --white: #FFFFFF;
+    --ease: cubic-bezier(.4, 0, .2, 1);
+    --ease-out: cubic-bezier(.2, .7, .2, 1);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    width: 100%; height: 100%;
+    background: var(--light-yellow);
+    font-family: 'Inter Tight', system-ui, -apple-system, sans-serif;
+    color: var(--black);
+    overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .canvas-wrap {
+    width: 512px; height: 580px;
+    max-width: 100vw; max-height: 100vh;
+    position: relative;
+  }
+
+  .canvas {
+    position: absolute; inset: 0;
+    background: var(--light-yellow);
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+  }
+
+  .ui {
+    position: relative;
+    width: 448px; height: 516px;
+    background: var(--white);
+    border: 1px solid var(--gray-light);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .scene { position: absolute; inset: 0; opacity: 0; transition: opacity 420ms var(--ease); pointer-events: none; }
+  .scene.active { opacity: 1; }
+
+  .grid-pad { position: absolute; inset: 0; padding: 18px 22px 0 22px; transition: transform 900ms var(--ease); transform-origin: 50% 50%; }
+  .grid-pad.zoom { transform: scale(1.1) translate(-8px, -10px); }
+
+  .grid-search { display: flex; align-items: center; justify-content: center; gap: 6px; color: var(--gray-xdark); font-size: 12px; margin-bottom: 6px; }
+  .grid-search svg { width: 11px; height: 11px; }
+  .grid-tabs { display: flex; gap: 12px; justify-content: center; font-size: 10.5px; color: var(--gray-xdark); margin-bottom: 12px; }
+  .grid-tabs b { color: var(--black); font-weight: 500; }
+
+  .grid-pill-row { display: flex; justify-content: flex-end; margin-bottom: 8px; }
+  .filter-pill { background: var(--yellow); color: var(--black); font-size: 10px; padding: 3px 8px; border-radius: 4px; display: inline-flex; align-items: center; gap: 5px; }
+  .filter-pill svg { width: 9px; height: 9px; }
+
+  .grid-table { width: 100%; border-collapse: collapse; }
+  .grid-table th, .grid-table td { text-align: left; font-size: 10.5px; padding: 14px 6px; border-bottom: 1px solid var(--gray-light); color: var(--black); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .grid-table th { color: var(--gray-xdark); font-weight: 500; font-size: 10px; border-bottom: 1px solid var(--gray-light); padding: 10px 6px; }
+  .grid-table th .filt { display: inline-block; margin-left: 4px; color: var(--gray-xdark); }
+  .grid-table td.title-cell { max-width: 270px; color: var(--black); }
+  .grid-table td.ar-cell { width: 80px; color: var(--black); }
+  .grid-row { transition: background-color 320ms var(--ease); }
+  .grid-row.hover { background: var(--gray-light); }
+
+  .tooltip {
+    position: absolute; width: 320px;
+    background: var(--white); border: 1px solid var(--gray-light);
+    border-radius: 8px; padding: 16px;
+    box-shadow: 0 12px 32px rgba(40,39,49,0.16);
+    font-size: 11px; line-height: 1.5; color: var(--black);
+    opacity: 0; transform: scale(0.95); transform-origin: top center;
+    transition: opacity 380ms var(--ease), transform 380ms var(--ease);
+    pointer-events: none; z-index: 80;
+  }
+  .tooltip.show { opacity: 1; transform: scale(1); }
+  .tooltip .yes-pill { display: inline-block; background: var(--light-green); color: var(--black); font-size: 10.5px; padding: 3px 10px; border-radius: 4px; margin-bottom: 10px; font-weight: 500; }
+  .tooltip .captured { color: var(--gray-xdark); margin-bottom: 10px; font-size: 10.5px; }
+  .tooltip .captured b { color: var(--black); font-weight: 500; }
+  .tooltip .clause-text { color: var(--black); }
+
+  .av { position: absolute; inset: 0; display: flex; flex-direction: column; }
+  .av-top { flex: 0 0 236px; padding: 16px 20px 12px 20px; border-bottom: 1px solid var(--gray-light); overflow: hidden; position: relative; }
+  .av-id { font-size: 10px; color: var(--gray-xdark); letter-spacing: 0.02em; margin-bottom: 3px; }
+  .av-title { font-size: 14px; font-weight: 600; line-height: 1.25; margin-bottom: 6px; }
+  .av-tag { display: inline-block; background: var(--gray-light); font-size: 9.5px; padding: 2px 6px; border-radius: 4px; margin-bottom: 10px; font-weight: 500; }
+  .dp-section-head { font-size: 10px; color: var(--gray-xdark); letter-spacing: 0.02em; font-weight: 500; margin-bottom: 4px; }
+  .dp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 10px; }
+  .dp-row { display: grid; grid-template-columns: 1fr 1fr; padding: 4px 6px; border-bottom: 1px dashed var(--gray-light); font-size: 10px; align-items: center; transition: background-color 420ms var(--ease); border-radius: 3px; }
+  .dp-row .k { color: var(--gray-xdark); }
+  .dp-row .v { color: var(--black); }
+  .dp-row.highlight { background: var(--gray-light); }
+
+  .av-bottom { flex: 1 1 auto; background: var(--gray); padding: 14px 18px; overflow: hidden; position: relative; }
+  .doc { background: var(--white); border-radius: 4px; padding: 14px 16px; height: 100%; overflow: hidden; position: relative; box-shadow: 0 1px 0 rgba(0,0,0,0.04); }
+  .doc-scroll { transition: transform 1300ms var(--ease); will-change: transform; }
+  .clause-h { font-size: 9.5px; font-weight: 600; margin: 8px 0 4px 0; color: var(--black); }
+  .clause-p { font-size: 8.5px; line-height: 1.55; color: var(--black); margin-bottom: 8px; }
+  .clause-block { border-radius: 4px; padding: 6px 8px; margin: 4px -8px 8px -8px; transition: background-color 600ms var(--ease); background-color: transparent; }
+  .clause-block.pink { background-color: var(--light-pink); }
+  .clause-block.yellow { background-color: var(--light-yellow); }
+  .clause-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 4px; }
+  .clause-tag { font-size: 8px; padding: 2px 6px; border-radius: 3px; font-weight: 500; color: var(--black); }
+  .clause-tag.pink { background: var(--pink); color: var(--black); }
+  .clause-tag.yellow { background: var(--yellow); color: var(--black); }
+  .clause-tag.pulse { animation: tag-pulse 1200ms var(--ease) 2; }
+  @keyframes tag-pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(255,168,255,0); transform: scale(1); } 50% { box-shadow: 0 0 0 4px rgba(255,168,255,0.35); transform: scale(1.06); } }
+
+  .cursor { position: absolute; width: 16px; height: 19px; pointer-events: none; z-index: 100; opacity: 0; filter: drop-shadow(0 1px 2px rgba(40,39,49,0.25)); transition: opacity 320ms var(--ease), transform 800ms var(--ease-out); }
+  .cursor.show { opacity: 1; }
+
+
+  @media (max-width: 540px), (max-height: 600px) { .canvas-wrap { transform: scale(0.85); } }
+</style>
+</head>
+<body>
+
+<div class="canvas-wrap">
+  <div class="canvas">
+    <div class="ui" id="ui">
+
+      <div class="scene active" id="scene-grid">
+        <div class="grid-pad" id="grid-pad">
+          <div class="grid-search">
+            <svg viewBox="0 0 12 12" fill="none"><circle cx="5" cy="5" r="3.2" stroke="currentColor" stroke-width="1.1"/><path d="M7.4 7.4 L10 10" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>
+            Search agreements
+          </div>
+          <div class="grid-tabs">
+            <span>Searching:</span><b>Agreements</b><span>Timeline</span><span>Clauses</span>
+          </div>
+          <div class="grid-pill-row">
+            <span class="filter-pill">
+              <svg viewBox="0 0 9 9" fill="none"><path d="M0.5 1 H8.5 L5.5 4.5 V8 L3.5 7 V4.5 Z" fill="#282731"/></svg>
+              Viewing 8 of 42
+            </span>
+          </div>
+          <table class="grid-table">
+            <thead>
+              <tr>
+                <th>Title</th>
+                <th>Auto-Renew <span class="filt">&#9662;</span></th>
+              </tr>
+            </thead>
+            <tbody id="grid-body">
+              <tr class="grid-row"><td class="title-cell">Apex - Cloud Indirect Tax Services Offering Terms</td><td class="ar-cell">Yes</td></tr>
+              <tr class="grid-row"><td class="title-cell">Apex - Cloud Indirect Tax Services Order</td><td class="ar-cell">Yes</td></tr>
+              <tr class="grid-row"><td class="title-cell">CloudPulse Innovations - SOW</td><td class="ar-cell">Yes</td></tr>
+              <tr class="grid-row"><td class="title-cell">EventFlow - Services Agreement</td><td class="ar-cell">Yes</td></tr>
+              <tr class="grid-row" id="row-fame"><td class="title-cell">Fame - Master Services Agreement</td><td class="ar-cell">Yes</td></tr>
+              <tr class="grid-row"><td class="title-cell">Panda - Master Services Agreement</td><td class="ar-cell">Yes</td></tr>
+              <tr class="grid-row"><td class="title-cell">People4U - Supplier Agreement</td><td class="ar-cell">Yes</td></tr>
+              <tr class="grid-row"><td class="title-cell">Pothos - Master Services Agreement</td><td class="ar-cell">Yes</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="tooltip" id="tooltip">
+          <span class="yes-pill">Yes</span>
+          <div class="captured">Captured in <b>Fame MSA Signed.pdf</b> by Nomio Staff</div>
+          <div class="clause-text">2.2 The Agreement shall automatically renew for subsequent terms of 6 months ("Subsequent Term" or "Subsequent Terms") unless terminated by either party by giving not less than 30 days' notice prior to the end of the Initial Term or any Subsequent Term.</div>
+        </div>
+      </div>
+
+      <div class="scene" id="scene-detail">
+        <div class="av">
+          <div class="av-top">
+            <div class="av-id">IC-64</div>
+            <div class="av-title">Fame - Master Services Agreement</div>
+            <span class="av-tag">Software</span>
+            <div class="dp-section-head">Data Points</div>
+            <div class="dp-grid" id="dp-grid">
+              <div class="dp-row"><span class="k">Primary Party</span><span class="v">Infinity Squared Limited</span></div>
+              <div class="dp-row"><span class="k">Counterparty</span><span class="v">Fame Inc</span></div>
+              <div class="dp-row"><span class="k">Active Date</span><span class="v">1 Sep 2023</span></div>
+              <div class="dp-row"><span class="k">Initial Term</span><span class="v">6 months</span></div>
+              <div class="dp-row" id="dp-ar"><span class="k">Auto-Renew</span><span class="v">Yes</span></div>
+              <div class="dp-row"><span class="k">Renewal Term</span><span class="v">6 months</span></div>
+              <div class="dp-row"><span class="k">Renewal Notice Period</span><span class="v">30 days</span></div>
+              <div class="dp-row"><span class="k">Payment Terms</span><span class="v">30 days</span></div>
+            </div>
+          </div>
+          <div class="av-bottom">
+            <div class="doc">
+              <div class="doc-scroll" id="doc-scroll">
+                <div class="clause-h">Section 1. Services.</div>
+                <p class="clause-p">1.1 Fame will provide the Services described in the applicable Order Form, subject to the terms and conditions of this Master Services Agreement.</p>
+                <p class="clause-p">1.2 Fame retains the right to modify the Services from time to time provided that such modifications do not materially diminish the functionality of the Services.</p>
+
+                <div class="clause-h">Section 2. Fees and Payment.</div>
+                <p class="clause-p">2.1 Fees. Customer will pay the fees specified in the Order Form (the "Fees").</p>
+
+                <div class="clause-block pink" id="clause-payment">
+                  <div class="clause-tags"><span class="clause-tag pink">Payment Terms</span></div>
+                  <div class="clause-h">2.2 Payment Terms</div>
+                  <p class="clause-p">Fame will invoice Customer for Fees, either within the Services or directly, within thirty (30) days of the Effective Date or otherwise as specified in the Order Form. Customer will pay all invoiced Fees net forty five (45) days from the date of the invoice. Fees do not include local, state, or federal taxes or duties of any kind and any such taxes will be assumed and paid by Customer.</p>
+                </div>
+
+                <div class="clause-h">Section 3. Term and Termination.</div>
+
+                <div class="clause-block yellow" id="clause-term">
+                  <div class="clause-tags">
+                    <span class="clause-tag yellow">Initial Term</span>
+                    <span class="clause-tag yellow" id="ar-tag">Auto-Renew</span>
+                    <span class="clause-tag yellow">Renewal Term</span>
+                    <span class="clause-tag yellow">Renewal Notice Period</span>
+                  </div>
+                  <div class="clause-h">3.1 Term and Renewal</div>
+                  <p class="clause-p">This MSA commences on the Effective Date and will remain in effect through the term specified in the Order Form, and will renew as specified in this Section (collectively the "Term"). If the Order Form does not specify, the Term will be six months and will automatically renew for successive six month periods unless Customer provides Fame with notice of termination at least thirty (30) days prior to the end of the Term.</p>
+                </div>
+
+                <p class="clause-p">3.2 Termination for Cause. A Party may terminate this MSA for cause (a) upon notice to the other Party of a material breach if such breach remains uncured after ten (10) days from the date of the breaching Party's receipt of such notice; (b) if the other Party becomes the subject of a petition in bankruptcy or any other proceeding relating to insolvency, receivership, liquidation or assignment for the benefit of creditors.</p>
+
+                <p class="clause-p">3.3 Effect of Termination and Survival. Upon termination of an Order Form or this MSA (a) with respect to termination of the entire MSA, all Order Forms will concurrently terminate, (b) Customer will have no further right to use the Services under the terminated or cancelled Order Forms.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <svg class="cursor" id="cursor" viewBox="0 0 16 19" fill="none">
+        <path d="M1.6 1.4 L1.6 15 L4.8 12 L7 17 L9 16 L7 11 L11 11 L1.6 1.4Z" fill="white" stroke="#282731" stroke-width="1.1" stroke-linejoin="round"/>
+      </svg>
+
+    </div>
+  </div>
+</div>
+
+<script>
+const $  = (s, r=document) => r.querySelector(s);
+const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+const ui = $('#ui');
+const cursor = $('#cursor');
+const TOTAL = 10000;
+let abortLoop = false;
+
+function showScene(name) { $$('.scene').forEach(s => s.classList.remove('active')); $('#scene-' + name).classList.add('active'); }
+function moveCursorTo(left, top) { cursor.style.transform = `translate(${left}px, ${top}px)`; }
+function placeCursorAt(left, top) {
+  cursor.style.transition = 'none';
+  cursor.style.transform = `translate(${left}px, ${top}px)`;
+  void cursor.offsetWidth;
+  cursor.style.transition = 'opacity 320ms var(--ease), transform 800ms cubic-bezier(.2,.7,.2,1)';
+}
+
+async function reset() {
+  $('#grid-pad').classList.remove('zoom');
+  $('#row-fame').classList.remove('hover');
+  $('#tooltip').classList.remove('show');
+  $('#dp-ar').classList.remove('highlight');
+  $('#clause-payment').className = 'clause-block';
+  $('#clause-term').className = 'clause-block';
+  $('#ar-tag').classList.remove('pulse');
+  void $('#ar-tag').offsetWidth;
+  $('#doc-scroll').style.transition = 'none';
+  $('#doc-scroll').style.transform = 'translateY(0)';
+  cursor.classList.remove('show');
+  showScene('grid');
+  void document.body.offsetWidth;
+  $('#doc-scroll').style.removeProperty('transition');
+}
+
+async function runLoop() {
+  while (!abortLoop) {
+    await reset();
+    const start = performance.now();
+    const tick = () => {
+      const t = (performance.now() - start) / TOTAL;
+      if (t < 1 && !abortLoop) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+
+    await sleep(1500);
+
+    $('#grid-pad').classList.add('zoom');
+    cursor.classList.add('show');
+    const uiR = ui.getBoundingClientRect();
+    const fameRow = $('#row-fame');
+    const fameAR = fameRow.querySelector('.ar-cell');
+    const arR = fameAR.getBoundingClientRect();
+    placeCursorAt(uiR.width - 40, uiR.height - 30);
+    await sleep(40);
+    moveCursorTo(arR.left - uiR.left + 16, arR.top - uiR.top + 20);
+    fameRow.classList.add('hover');
+    await sleep(900);
+
+    const tooltip = $('#tooltip');
+    const uiW = uiR.width;
+    const uiH = uiR.height;
+    const ttW = 320;
+    tooltip.style.left = ((uiW - ttW) / 2) + 'px';
+    tooltip.style.top = (uiH - 180) + 'px';
+    tooltip.classList.add('show');
+    await sleep(1500);
+
+    tooltip.classList.remove('show');
+    await sleep(140);
+    cursor.classList.remove('show');
+    showScene('detail');
+    await sleep(540);
+
+    $('#dp-ar').classList.add('highlight');
+    await sleep(540);
+
+    $('#clause-payment').classList.add('pink');
+    await sleep(500);
+    $('#clause-term').classList.add('yellow');
+    await sleep(500);
+
+    const docScroll = $('#doc-scroll');
+    docScroll.style.transition = 'transform 1300ms var(--ease)';
+    docScroll.style.transform = 'translateY(-200px)';
+    await sleep(900);
+    $('#ar-tag').classList.add('pulse');
+    await sleep(1100);
+
+    await sleep(700);
+    $('#scene-detail').classList.remove('active');
+    await sleep(280);
+  }
+}
+
+runLoop();
+window.addEventListener('beforeunload', () => { abortLoop = true; });
+</script>
+</body>
+</html>

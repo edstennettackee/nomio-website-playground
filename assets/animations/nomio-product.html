@@ -1,0 +1,1357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Nomio Product Animation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --black: #282731;
+    --gray-xdark: #6D6A72;
+    --gray-dark: #CCC6CC;
+    --gray: #D7D2D7;
+    --gray-light: #EDEBED;
+    --gray-xlight: #F8F7F8;
+    --light-orange: #FFF5EB;
+    --orange: #FFB566;
+    --light-yellow: #FFF8F0;
+    --yellow: #FFE46B;
+    --light-pink: #FFF5FF;
+    --pink: #FFA8FF;
+    --white: #FFFFFF;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    height: 100%;
+    background: var(--gray-xlight);
+    font-family: 'Inter Tight', system-ui, -apple-system, sans-serif;
+    color: var(--black);
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+  }
+
+  /* The fixed-aspect stage. 1280x800 design canvas, scaled to fit viewport. */
+  .stage-wrap {
+    width: 100%;
+    max-width: 1280px;
+    aspect-ratio: 16 / 10;
+    position: relative;
+  }
+
+  .stage {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--white);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 1px 0 rgba(40,39,49,0.04), 0 8px 32px rgba(40,39,49,0.06);
+    container-type: size;
+  }
+
+  /* Top chrome */
+  .chrome {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    z-index: 50;
+    background: var(--white);
+  }
+  .chrome-left { display: flex; align-items: center; gap: 8px; }
+  .chrome-logo { width: 22px; height: 22px; }
+  .chrome-logo svg { width: 100%; height: 100%; display: block; }
+  .chrome-org { font-size: 13px; font-weight: 500; color: var(--black); letter-spacing: -0.005em; }
+  .chrome-caret { color: var(--gray-xdark); font-size: 10px; margin-left: 2px; }
+
+  /* Scene container */
+  .scenes {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+  .scene {
+    position: absolute;
+    inset: 56px 0 0 0;
+    opacity: 0;
+    transition: opacity 280ms ease-in-out;
+  }
+  .scene.active { opacity: 1; }
+
+  /* ============ Scene 1 + 2: Two-column board ============ */
+  .board {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    padding: 32px 80px 24px 80px;
+    gap: 80px;
+  }
+  .board-col { position: relative; }
+  .col-header { margin-bottom: 24px; }
+  .col-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 10px;
+  }
+  .col-title {
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--black);
+    letter-spacing: -0.015em;
+  }
+  .col-title .num {
+    display: inline-block;
+    min-width: 1ch;
+  }
+  .col-sub {
+    font-size: 12px;
+    color: var(--gray-xdark);
+    line-height: 1.5;
+    max-width: 320px;
+  }
+  .upload-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--black);
+    color: var(--white);
+    padding: 7px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1;
+  }
+  .upload-btn svg { width: 12px; height: 12px; }
+
+  .search-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 1px solid var(--gray-light);
+    padding: 8px 4px 10px 4px;
+    color: var(--gray-xdark);
+    font-size: 13px;
+  }
+  .search-bar svg { width: 14px; height: 14px; flex: 0 0 14px; }
+  .agreements-meta {
+    margin-top: 12px;
+    font-size: 11px;
+    color: var(--gray-xdark);
+  }
+
+  /* Documents column */
+  .docs-list {
+    margin-top: 16px;
+    position: relative;
+  }
+  .dup-banner {
+    background: var(--light-orange);
+    border-radius: 8px;
+    padding: 10px 14px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 10px;
+    opacity: 0;
+  }
+  .dup-banner.show { opacity: 1; transition: opacity 360ms ease-in-out; }
+  .dup-banner-left {
+    display: flex; align-items: flex-start; gap: 8px;
+    font-size: 12px;
+    color: var(--black);
+  }
+  .dup-banner-left svg { width: 13px; height: 13px; margin-top: 1px; }
+  .dup-banner-title { font-weight: 600; line-height: 1.4; }
+  .dup-banner-link {
+    display: block;
+    margin-top: 2px;
+    font-size: 11px;
+    color: var(--black);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .dup-banner-caret { color: var(--gray-xdark); font-size: 10px; margin-top: 4px; }
+
+  .doc-card {
+    background: var(--white);
+    border: 1px solid var(--gray-light);
+    border-radius: 6px;
+    padding: 10px 12px;
+    font-size: 12px;
+    color: var(--black);
+    margin-bottom: 6px;
+    line-height: 1.3;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    opacity: 0;
+    will-change: transform, opacity, height, margin, padding;
+    overflow: hidden;
+  }
+  .doc-card .name {
+    flex: 1 1 auto;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .doc-card .dup-mark {
+    display: inline-block;
+    margin-left: 6px;
+    color: var(--gray-xdark);
+    font-size: 10px;
+    font-weight: 500;
+  }
+
+  /* Merged-duplicate card on the left (orange) */
+  .doc-card.is-duplicate-merged {
+    background: var(--light-orange);
+    border-color: var(--orange);
+  }
+  .doc-card.is-duplicate-merged .name b {
+    font-weight: 600;
+  }
+
+  /* Trash card label ("Not a contract") */
+  .trash-tag {
+    flex: 0 0 auto;
+    background: #FFD9D5;
+    color: #990500;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 3px 7px;
+    border-radius: 4px;
+    line-height: 1.2;
+    margin-left: 6px;
+    white-space: nowrap;
+  }
+
+  /* macOS-style file icons */
+  .file-icon {
+    flex: 0 0 18px;
+    width: 18px;
+    height: 22px;
+    position: relative;
+    display: block;
+  }
+  .file-icon svg { width: 100%; height: 100%; display: block; }
+
+  /* Agreements column */
+  .agreements-list {
+    margin-top: 14px;
+    position: relative;
+  }
+  .agreement-card {
+    background: var(--white);
+    border: 1px solid transparent;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 12px;
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  .agreement-card.show { opacity: 1; transform: translateY(0); transition: opacity 320ms ease-in-out, transform 320ms ease-in-out; }
+  .agreement-id {
+    font-size: 11px;
+    color: var(--gray-xdark);
+    margin-bottom: 4px;
+    font-weight: 500;
+  }
+  .agreement-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--black);
+    line-height: 1.35;
+    margin-bottom: 4px;
+  }
+  .agreement-link {
+    font-size: 11px;
+    color: var(--gray-xdark);
+    line-height: 1.45;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .agreement-link svg { width: 11px; height: 11px; flex: 0 0 11px; }
+  .agreement-link u { text-decoration: underline; text-underline-offset: 2px; color: var(--black); }
+  .agreement-children {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px dashed var(--gray-light);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .agreement-children .child {
+    font-size: 12px;
+    color: var(--black);
+    line-height: 1.4;
+  }
+
+  /* SVG link layer overlaid on board */
+  .link-layer {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 5;
+  }
+  .link-layer path {
+    fill: none;
+    stroke: var(--gray-dark);
+    stroke-width: 1.25;
+    stroke-dasharray: 1000;
+    stroke-dashoffset: 1000;
+  }
+
+  /* Flying file (used in Scene 2) */
+  .flyer {
+    position: absolute;
+    background: var(--white);
+    border: 1px solid var(--gray-light);
+    border-radius: 6px;
+    padding: 10px 12px;
+    font-size: 12px;
+    color: var(--black);
+    pointer-events: none;
+    z-index: 20;
+    box-shadow: 0 4px 14px rgba(40,39,49,0.12);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .flyer .name {
+    flex: 1 1 auto;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* ============ Scene 3 + 4: Table view ============ */
+  .table-scene {
+    padding: 8px 80px 0 80px;
+    overflow: hidden;
+  }
+  .search-hero {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 8px;
+    margin-bottom: 18px;
+  }
+  .search-hero-row {
+    display: flex; align-items: center; gap: 10px;
+    color: var(--gray-xdark);
+    font-size: 18px;
+    font-weight: 400;
+  }
+  .search-hero-row svg { width: 16px; height: 16px; }
+  .search-hero-tabs {
+    margin-top: 12px;
+    font-size: 11px;
+    color: var(--gray-xdark);
+    display: flex;
+    gap: 14px;
+    align-items: center;
+  }
+  .search-hero-tabs span.label { color: var(--gray-xdark); }
+  .search-hero-tabs span.tab { color: var(--gray-xdark); }
+  .search-hero-tabs span.tab.active { color: var(--black); font-weight: 600; }
+
+  .table-meta {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 8px;
+  }
+  .table-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--yellow);
+    color: var(--black);
+    padding: 5px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 500;
+  }
+  .table-pill svg { width: 11px; height: 11px; }
+
+  .table {
+    width: 100%;
+    border-top: 1px solid var(--gray-light);
+    border-bottom: 1px solid var(--gray-light);
+    font-size: 11px;
+    color: var(--black);
+    table-layout: fixed;
+    border-collapse: collapse;
+  }
+  .table th, .table td {
+    text-align: left;
+    padding: 14px 8px;
+    vertical-align: middle;
+    line-height: 1.4;
+  }
+  .table th {
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--gray-xdark);
+    border-bottom: 1px solid var(--gray-light);
+    padding: 10px 8px;
+  }
+  .table th svg { width: 10px; height: 10px; vertical-align: middle; margin-left: 4px; }
+  .table tbody tr {
+    border-bottom: 1px solid var(--gray-light);
+    opacity: 0;
+    transform: translateY(6px);
+    transition: opacity 260ms ease-in-out, transform 260ms ease-in-out, background-color 200ms ease-in-out;
+  }
+  .table tbody tr.show { opacity: 1; transform: translateY(0); }
+  .table tbody tr.hover { background: var(--gray-xlight); }
+  .table .muted { color: var(--gray-dark); }
+  .table .label-tag {
+    display: inline-block;
+    background: var(--gray-light);
+    color: var(--black);
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-right: 4px;
+  }
+
+  /* Tooltip card from screenshot 4 */
+  .tooltip {
+    position: absolute;
+    background: var(--white);
+    border: 1px solid var(--gray-light);
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(40,39,49,0.08);
+    padding: 14px 16px;
+    width: 360px;
+    z-index: 60;
+    opacity: 0;
+    transform: translateY(4px);
+    transition: opacity 220ms ease-in-out, transform 220ms ease-in-out;
+    pointer-events: none;
+  }
+  .tooltip.show { opacity: 1; transform: translateY(0); }
+  .tooltip-yes {
+    display: inline-block;
+    background: #D9F6F2;
+    color: var(--black);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 500;
+    margin-bottom: 10px;
+  }
+  .tooltip-source {
+    font-size: 11px;
+    color: var(--gray-xdark);
+    margin-bottom: 8px;
+  }
+  .tooltip-clause {
+    font-size: 11px;
+    color: var(--black);
+    line-height: 1.6;
+    text-align: justify;
+  }
+
+  /* ============ Scene 5 + 6: Agreement detail ============ */
+  .detail {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    grid-template-columns: 360px 1fr;
+  }
+  .detail-left {
+    padding: 24px 24px 24px 32px;
+    border-right: 1px solid var(--gray-light);
+    overflow: hidden;
+  }
+  .detail-right {
+    background: var(--gray-xlight);
+    padding: 24px 60px 24px 60px;
+    overflow: hidden;
+    position: relative;
+  }
+  .detail-id {
+    font-size: 11px;
+    color: var(--gray-xdark);
+    margin-bottom: 4px;
+    font-weight: 500;
+  }
+  .detail-title {
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--black);
+    line-height: 1.2;
+    margin-bottom: 10px;
+    letter-spacing: -0.015em;
+  }
+  .detail-tag {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--gray-light);
+    color: var(--black);
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    margin-bottom: 16px;
+  }
+  .detail-pdf {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--gray-light);
+    border-radius: 6px;
+    font-size: 11px;
+    padding: 4px 8px;
+    margin-bottom: 18px;
+  }
+  .detail-pdf .smart {
+    background: var(--black); color: var(--white);
+    padding: 2px 6px; border-radius: 4px; font-weight: 500;
+  }
+  .detail-section {
+    margin-top: 16px;
+    border-top: 1px solid var(--gray-light);
+    padding-top: 12px;
+  }
+  .detail-section-title {
+    font-size: 12px; font-weight: 600; color: var(--black); margin-bottom: 8px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .detail-section-title svg { width: 10px; height: 10px; color: var(--gray-xdark); }
+  .detail-search-pill {
+    display: flex; align-items: center; gap: 6px;
+    border: 1px solid var(--gray-light);
+    border-radius: 6px;
+    padding: 6px 10px;
+    color: var(--gray-xdark);
+    font-size: 11px;
+  }
+  .detail-search-pill svg { width: 11px; height: 11px; }
+
+  .data-points {
+    margin-top: 8px;
+    font-size: 11px;
+  }
+  .dp-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    padding: 7px 10px;
+    margin: 0 -10px;
+    border-bottom: 1px dashed var(--gray-light);
+    align-items: center;
+    border-radius: 2px;
+  }
+  .dp-key { color: var(--gray-xdark); }
+  .dp-val { color: var(--black); }
+  .dp-val.muted { color: var(--gray-dark); font-style: italic; }
+  .dp-row.hl { background: var(--gray-light); transition: background-color 240ms ease-in-out; }
+  .dp-row { transition: background-color 240ms ease-in-out; }
+  .dp-row.is-primary { background: var(--light-pink); border-bottom-color: transparent; }
+
+  /* Document on the right */
+  .doc-page {
+    background: var(--white);
+    border-radius: 4px;
+    padding: 36px 44px;
+    box-shadow: 0 1px 0 rgba(40,39,49,0.04), 0 4px 20px rgba(40,39,49,0.04);
+    font-size: 10.5px;
+    color: var(--black);
+    line-height: 1.7;
+    height: 100%;
+    overflow: hidden;
+    position: relative;
+  }
+  .doc-scroll {
+    transition: transform 1400ms ease-in-out;
+    will-change: transform;
+  }
+  .doc-h1 {
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 10px;
+  }
+  .doc-h2 {
+    font-size: 11.5px;
+    font-weight: 600;
+    margin-top: 14px;
+    margin-bottom: 6px;
+  }
+  .doc-block { margin-bottom: 10px; }
+  .doc-tags {
+    display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 6px;
+  }
+  .doc-tag {
+    background: var(--pink);
+    color: var(--black);
+    font-size: 9px;
+    padding: 2px 5px;
+    border-radius: 3px;
+    font-weight: 500;
+    line-height: 1.2;
+    border: 1px solid rgba(40,39,49,0.06);
+  }
+  .doc-section-num {
+    font-weight: 600;
+    margin-bottom: 2px;
+    display: block;
+  }
+  .doc-block.hl-pink {
+    background: var(--light-pink);
+    padding: 7px 10px;
+    border-radius: 2px;
+    margin-left: -10px;
+    margin-right: -10px;
+  }
+  .doc-block.hl-yellow {
+    background: var(--light-yellow);
+    padding: 7px 10px;
+    border-radius: 2px;
+    margin-left: -10px;
+    margin-right: -10px;
+  }
+  .doc-block.hl {
+    padding: 7px 10px;
+    margin-left: -10px;
+    margin-right: -10px;
+    border-radius: 2px;
+    transition: background-color 320ms ease-in-out;
+  }
+  .doc-block.hl.is-auto-active { background: var(--light-yellow); }
+
+  /* Cursor */
+  .cursor {
+    position: absolute;
+    width: 18px;
+    height: 22px;
+    z-index: 100;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 200ms ease-in-out, top 800ms cubic-bezier(.4,0,.2,1), left 800ms cubic-bezier(.4,0,.2,1);
+    filter: drop-shadow(0 1px 2px rgba(40,39,49,0.25));
+  }
+  .cursor.show { opacity: 1; }
+
+  @media (max-width: 720px) {
+    body { padding: 0; }
+    .stage-wrap { aspect-ratio: 16 / 11; }
+    .board { padding: 16px 24px 16px 24px; gap: 28px; }
+    .table-scene { padding: 4px 24px 0 24px; }
+    .detail { grid-template-columns: 200px 1fr; }
+    .detail-left { padding: 16px; }
+    .detail-right { padding: 16px 20px; }
+    .col-title { font-size: 16px; }
+    .doc-page { padding: 18px 20px; font-size: 9px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="stage-wrap">
+  <div class="stage" id="stage">
+
+    <!-- Top chrome (persistent) -->
+    <div class="chrome">
+      <div class="chrome-left">
+        <div class="chrome-logo" id="chrome-logo"></div>
+        <span class="chrome-org">Infinity Cubed</span>
+        <span class="chrome-caret">&#9662;</span>
+      </div>
+    </div>
+
+    <!-- Scenes -->
+    <div class="scenes">
+
+      <!-- ===================== Scene 1 + 2: Two-column ===================== -->
+      <section class="scene" id="scene-board">
+        <div class="board">
+          <!-- Left: Documents to organise -->
+          <div class="board-col" id="col-docs">
+            <div class="col-header">
+              <div class="col-title-row">
+                <div class="col-title"><span class="num" id="docs-count">0</span> Documents to Organise</div>
+                <div class="upload-btn">
+                  <svg viewBox="0 0 12 12" fill="none"><path d="M6 9V3M6 3L3 6M6 3L9 6" stroke="white" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  Upload
+                </div>
+              </div>
+              <div class="col-sub">Upload documents, then leave the rest to us! Nomio will sort them into agreements for you.</div>
+            </div>
+
+            <div class="docs-list" id="docs-list">
+              <div class="dup-banner" id="dup-banner">
+                <div class="dup-banner-left">
+                  <svg viewBox="0 0 14 14" fill="none"><rect x="3" y="3" width="8" height="8" rx="1.5" stroke="#282731" stroke-width="1.2"/><rect x="5" y="5" width="8" height="8" rx="1.5" fill="#FFF5EB" stroke="#282731" stroke-width="1.2"/></svg>
+                  <div>
+                    <div class="dup-banner-title">1 exact duplicate detected</div>
+                    <a class="dup-banner-link">Delete All</a>
+                  </div>
+                </div>
+                <div class="dup-banner-caret">&#9662;</div>
+              </div>
+              <!-- Doc cards injected by JS -->
+            </div>
+          </div>
+
+          <!-- Right: Agreements -->
+          <div class="board-col" id="col-agreements">
+            <div class="col-header">
+              <div class="col-title-row">
+                <div class="col-title"><span class="num" id="agr-count">0</span> Agreements</div>
+              </div>
+              <div class="search-bar">
+                <svg viewBox="0 0 14 14" fill="none"><circle cx="6" cy="6" r="4.5" stroke="#6D6A72" stroke-width="1.2"/><path d="M9.5 9.5L12 12" stroke="#6D6A72" stroke-width="1.2" stroke-linecap="round"/></svg>
+                <span>Search agreements</span>
+              </div>
+              <div class="agreements-meta" id="agr-meta" style="opacity:0;">Viewing 0 out of 0 agreements.</div>
+            </div>
+
+            <div class="agreements-list" id="agreements-list">
+              <!-- Agreement cards injected by JS -->
+            </div>
+          </div>
+
+          <!-- Linking layer (SVG) -->
+          <svg class="link-layer" id="link-layer" preserveAspectRatio="none"></svg>
+
+        </div>
+      </section>
+
+      <!-- ===================== Scene 3 + 4: Table ===================== -->
+      <section class="scene" id="scene-table">
+        <div class="table-scene">
+          <div class="search-hero">
+            <div class="search-hero-row">
+              <svg viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="5" stroke="#6D6A72" stroke-width="1.4"/><path d="M11 11L14 14" stroke="#6D6A72" stroke-width="1.4" stroke-linecap="round"/></svg>
+              <span>Search agreements</span>
+            </div>
+            <div class="search-hero-tabs">
+              <span class="label">Searching:</span>
+              <span class="tab active">Agreements</span>
+              <span class="tab">Timeline</span>
+              <span class="tab">Clauses</span>
+            </div>
+          </div>
+
+          <div class="table-meta">
+            <div class="table-pill">
+              <svg viewBox="0 0 11 11" fill="none"><path d="M1 2H10L7 6V9L4 10V6L1 2Z" stroke="#282731" stroke-width="1" fill="none"/></svg>
+              Viewing 10 of 42 agreements
+              <span style="opacity:.6;">&#9662;</span>
+            </div>
+          </div>
+
+          <table class="table" id="agr-table">
+            <thead>
+              <tr>
+                <th style="width:24%;">Title</th>
+                <th style="width:7%;">ID</th>
+                <th style="width:11%;">Active Date</th>
+                <th style="width:11%;">Initial Term</th>
+                <th style="width:9%;">Auto-Renew <svg viewBox="0 0 10 10" fill="none"><path d="M1 2H9L6 5V8L4 9V5L1 2Z" stroke="#6D6A72" stroke-width="0.8"/></svg></th>
+                <th style="width:13%;">Renewal Notice Period</th>
+                <th style="width:13%;">Labels</th>
+                <th style="width:12%;">Primary Party</th>
+              </tr>
+            </thead>
+            <tbody id="agr-tbody"></tbody>
+          </table>
+
+          <!-- Tooltip injected next to Fame row -->
+          <div class="tooltip" id="tooltip">
+            <div class="tooltip-yes">Yes</div>
+            <div class="tooltip-source">Captured in <b>Fame MSA Signed.pdf</b> by <b>Nomio Staff</b></div>
+            <div class="tooltip-clause">
+              2.2 The Agreement shall automatically renew for subsequent terms of 6 months ("Subsequent Term" or "Subsequent Terms") unless terminated by either party by giving not less than 30 days' notice prior to the end of the Initial Term or any Subsequent Term.
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================== Scene 5 + 6: Detail ===================== -->
+      <section class="scene" id="scene-detail">
+        <div class="detail">
+          <div class="detail-left">
+            <div class="detail-id">IC-64</div>
+            <div class="detail-title">Fame - Master Services Agreement</div>
+            <div>
+              <span class="detail-tag">Software</span>
+            </div>
+            <div class="detail-pdf">
+              <span>PDF</span>
+              <span class="smart">Smart</span>
+            </div>
+
+            <div class="detail-section">
+              <div class="detail-section-title">Clause Search</div>
+              <div class="detail-search-pill">
+                <svg viewBox="0 0 11 11" fill="none"><circle cx="4.5" cy="4.5" r="3.5" stroke="#6D6A72" stroke-width="1"/><path d="M7.5 7.5L10 10" stroke="#6D6A72" stroke-width="1" stroke-linecap="round"/></svg>
+                <span>Search clauses in this agreement&#8230;</span>
+              </div>
+            </div>
+
+            <div class="detail-section">
+              <div class="detail-section-title">Data Points</div>
+              <div class="data-points" id="data-points">
+                <div class="dp-row" data-key="primary"><div class="dp-key">Primary Party</div><div class="dp-val">Infinity Squared Limited</div></div>
+                <div class="dp-row" data-key="counterparty"><div class="dp-key">Counterparty</div><div class="dp-val">Fame Inc</div></div>
+                <div class="dp-row" data-key="active"><div class="dp-key">Active Date</div><div class="dp-val">1 Sep 2023</div></div>
+                <div class="dp-row" data-key="initial"><div class="dp-key">Initial Term</div><div class="dp-val">6 months</div></div>
+                <div class="dp-row" data-key="auto"><div class="dp-key">Auto-Renew</div><div class="dp-val">Yes</div></div>
+                <div class="dp-row" data-key="renterm"><div class="dp-key">Renewal Term</div><div class="dp-val">6 months</div></div>
+                <div class="dp-row" data-key="rendate"><div class="dp-key">Renewal Date</div><div class="dp-val">1 Sep 2026</div></div>
+                <div class="dp-row" data-key="rennotice"><div class="dp-key">Renewal Notice Period</div><div class="dp-val">30 days</div></div>
+                <div class="dp-row" data-key="payment"><div class="dp-key">Payment Terms</div><div class="dp-val">30 days</div></div>
+                <div class="dp-row" data-key="status"><div class="dp-key">Active Status</div><div class="dp-val">Active</div></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="detail-right">
+            <div class="doc-page">
+              <div class="doc-scroll" id="doc-scroll">
+
+                <div class="doc-h1">Fame Master Services Agreement</div>
+
+                <div class="doc-block hl hl-pink">
+                  <div class="doc-tags">
+                    <span class="doc-tag">Active Date</span>
+                    <span class="doc-tag">Counterparty</span>
+                    <span class="doc-tag">Primary Party</span>
+                  </div>
+                  <div>
+                    This Fame Master Services Agreement ("MSA") is effective as <u>1 September 2023</u> and is by and between <u>Fame Inc</u>, a Delaware corporation with a place of business at 1 Lexington Avenue, San Francisco, CA 94102 ("Fame"), and <u>Infinity Squared Limited</u>, a company registered in England and Wales with Registered No. 1111111, whose registered office is at Audley Plaza, 1 Infinity Boulevard, London, SW1 1AA United Kingdom ("Customer").
+                  </div>
+                </div>
+
+                <div class="doc-h2">Section 1. Services.</div>
+                <div class="doc-block">
+                  The "Services" mean the products and services that are ordered by Customer from Fame in an Order Form referencing this MSA. Services exclude any products or services provided by third parties, even if Customer has connected those products or services to the Services.
+                </div>
+
+                <div class="doc-h2">Section 2. Fees and Payment.</div>
+                <div class="doc-block">
+                  2.1. Fees. Customer will pay the fees specified in the Order Form (the "Fees").
+                </div>
+                <div class="doc-block hl hl-pink" id="block-payment">
+                  <div class="doc-tags"><span class="doc-tag">Payment Terms</span></div>
+                  <span class="doc-section-num">2.2 Payment Terms</span>
+                  Fame will invoice Customer for Fees, either within the Services or directly, within thirty (30) days of the Effective Date or otherwise as specified in the Order Form. Customer will pay all invoiced Fees net forty five (45) days from the date of the invoice. Fees do not include local, state, or federal taxes or duties of any kind and any such taxes will be assumed and paid by Customer.
+                </div>
+
+                <div class="doc-h2">Section 3. Term and Termination.</div>
+                <div class="doc-block hl hl-pink" id="block-term">
+                  <div class="doc-tags">
+                    <span class="doc-tag">Initial Term</span>
+                    <span class="doc-tag">Auto-Renew</span>
+                    <span class="doc-tag">Renewal Term</span>
+                    <span class="doc-tag">Renewal Notice Period</span>
+                  </div>
+                  <span class="doc-section-num">3.1 Term and Renewal</span>
+                  This MSA commences on the Effective Date and will remain in effect through the term specified in the Order Form, and will renew as specified in this Section (collectively the "Term"). If the Order Form does not specify, the Term will be six months and will automatically renew for successive six month periods unless Customer provides Fame with notice of termination at least thirty (30) days prior to the end of the Term.
+                </div>
+
+                <div class="doc-block">
+                  3.2. Termination for Cause. A Party may terminate this MSA for cause (a) upon notice to the other Party of a material breach if such breach remains uncured after ten (10) days from the date of the breaching Party's receipt of such notice; (b) if the other Party becomes the subject of a petition in bankruptcy or any other proceeding relating to insolvency, receivership, liquidation or assignment for the benefit of creditors.
+                </div>
+
+                <div class="doc-block">
+                  3.3. Effect of Termination and Survival. Upon termination of an Order Form or this MSA (a) with respect to termination of the entire MSA, all Order Forms will concurrently terminate, (b) Customer will have no further right to use the Services under the terminated or cancelled Order Forms.
+                </div>
+
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- Custom cursor (shared) -->
+    <svg class="cursor" id="cursor" viewBox="0 0 18 22" fill="none">
+      <path d="M2 1.5L2 17.5L6 14L8.5 19.5L11 18.5L8.5 13L13 13L2 1.5Z" fill="white" stroke="#282731" stroke-width="1.2" stroke-linejoin="round"/>
+    </svg>
+
+  </div>
+</div>
+
+<script>
+const TOTAL = 20000;
+const TIMING = {
+  s1: { start: 0,     end: 2900  },
+  s2: { start: 2900,  end: 7000 },
+  s3: { start: 7000,  end: 10000 },
+  s4: { start: 10000, end: 12500 },
+  s5: { start: 12500, end: 14000 },
+  s6: { start: 14000, end: 20000 },
+};
+
+const REAL_MARK = `
+<svg viewBox="40 25 110 85" xmlns="http://www.w3.org/2000/svg">
+  <path fill-rule="evenodd" clip-rule="evenodd" d="M124.813 29L127.641 31.8284C132.191 36.3785 135.801 41.7802 138.263 47.7252C140.726 53.6701 141.993 60.0419 141.993 66.4767C141.993 72.9114 140.726 79.2832 138.263 85.2281C135.801 91.1731 132.191 96.5748 127.641 101.125L124.813 103.953L119.156 98.2965L119.158 98.2947L105.467 84.6037C101.922 87.0464 97.6265 88.4767 92.9965 88.4767C80.8462 88.4767 70.9965 78.6269 70.9965 66.4767C70.9965 61.8467 72.4267 57.5508 74.8695 54.0066L61.3169 40.454C58.7587 43.5687 56.669 47.0494 55.1209 50.7867C53.0605 55.761 52 61.0925 52 66.4767C52 71.8609 53.0605 77.1924 55.1209 82.1667C57.1814 87.1411 60.2014 91.6609 64.0086 95.4681L66.837 98.2965L61.1802 103.953L58.3518 101.125C53.8017 96.5749 50.1924 91.1731 47.7299 85.2282C45.2674 79.2832 44 72.9115 44 66.4767C44 60.0419 45.2674 53.6702 47.7299 47.7252C50.1924 41.7803 53.8017 36.3785 58.3518 31.8285L61.1802 29L66.837 34.6569L66.8353 34.6587L80.5264 48.3497C84.0705 45.9069 88.3665 44.4767 92.9965 44.4767C105.147 44.4767 114.996 54.3264 114.996 66.4767C114.996 71.1067 113.566 75.4026 111.123 78.9468L124.676 92.4994C127.234 89.3847 129.324 85.904 130.872 82.1667C132.932 77.1923 133.993 71.8609 133.993 66.4767C133.993 61.0925 132.932 55.761 130.872 50.7866C128.812 45.8123 125.792 41.2925 121.984 37.4853L119.156 34.6569L124.813 29ZM92.9965 80.4767C100.728 80.4767 106.996 74.2087 106.996 66.4767C106.996 58.7447 100.728 52.4767 92.9965 52.4767C85.2645 52.4767 78.9965 58.7447 78.9965 66.4767C78.9965 74.2087 85.2645 80.4767 92.9965 80.4767Z" fill="#282731"/>
+</svg>`;
+
+document.getElementById('chrome-logo').innerHTML = REAL_MARK;
+
+const DOC_FILES = [
+  { name: 'Pothos copy ES markup FINAL.docx',  group: 'pothos', dup: false },
+  { name: 'Pothos copy ES markup FINAL v2.docx', group: 'pothos', dup: true },
+  { name: 'Apex MSA signed (1).pdf',           group: 'apex',   dup: false },
+  { name: 'panda_msa_final_FINAL.docx',        group: 'panda',  dup: false },
+  { name: 'deliveroo_receipt_24_03.pdf',       group: 'trash',  dup: false },
+];
+
+const AGREEMENTS_RIGHT = [
+  { id: 'IC-18', title: 'Apex - Master Services Agreement', linked: null, deps: '2 amendments', children: ['Apex - MSA Amendment 1', 'Apex - MSA Amendment 2'], sourceGroup: 'apex' },
+  { id: 'IC-15', title: 'Pothos - Order Form (Payroll Services)', linked: 'IC-05 Pothos - Master Services Agreement', deps: null, children: ['Pothos - Payroll Services Terms'], sourceGroup: 'pothos' },
+  { id: 'IC-49', title: 'Panda - Master Services Agreement', linked: null, deps: '2 amendments', children: [], sourceGroup: 'panda' },
+];
+
+function fileIconSVG(ext) {
+  const e = ext.toLowerCase();
+  const ribbon = e === 'pdf' ? '#990500' : '#006680';
+  const label = e === 'pdf' ? 'PDF' : 'DOC';
+  return `<svg viewBox="0 0 36 44" xmlns="http://www.w3.org/2000/svg"><path d="M3 2 H24 L33 11 V40 a2 2 0 0 1 -2 2 H3 a2 2 0 0 1 -2 -2 V4 a2 2 0 0 1 2 -2 z" fill="#FFFFFF" stroke="#CCC6CC" stroke-width="1"/><path d="M24 2 V11 H33" fill="#EDEBED" stroke="#CCC6CC" stroke-width="1" stroke-linejoin="round"/><rect x="6" y="24" width="21" height="7" rx="1" fill="${ribbon}"/><text x="16.5" y="29.6" text-anchor="middle" font-family="Inter Tight, sans-serif" font-size="5.6" font-weight="700" fill="#FFFFFF" letter-spacing="0.3">${label}</text></svg>`;
+}
+function extOf(name) { const m = /\.([a-z0-9]+)$/i.exec(name); return m ? m[1].toLowerCase() : 'doc'; }
+
+const docsList = document.getElementById('docs-list');
+DOC_FILES.forEach((f, i) => {
+  const el = document.createElement('div');
+  el.className = 'doc-card';
+  el.dataset.idx = i;
+  el.dataset.group = f.group;
+  const ext = extOf(f.name);
+  el.innerHTML = `<span class="file-icon">${fileIconSVG(ext)}</span><span class="name">${f.name}</span>${f.dup ? '<span class="dup-mark">duplicate</span>' : ''}`;
+  docsList.appendChild(el);
+});
+
+const TABLE_ROWS = [
+  ['Apex - Cloud Indirect Tax Services Offering Terms', 'IC-25', '15 December 2022', 'No Value', 'Yes', 'No Value', ['Software'], 'Infinity Limited'],
+  ['Apex - Cloud Indirect Tax Services Order',          'IC-26', '7 June 2023',      '3 years',  'Yes', 'No Value', ['Software'], 'Infinity Limited'],
+  ['Apex - Cloud Services Order',                       'IC-20', '15 December 2022', '3 years 1 month', 'Yes', 'No Value', ['Software'], 'Infinity Limited'],
+  ['CloudPulse Innovations - SOW',                      'IC-30', '26 June 2020',     '12 months','Yes', '45 days',  ['Commercial','Software'], 'Infinity Limited'],
+  ['EventFlow - Services Agreement',                    'IC-57', '4 November 2021',  '36 months','Yes', '30 days',  ['Marketing'], 'Infinity Limited'],
+  ['Fame - Master Services Agreement',                  'IC-64', '1 September 2023', '6 months', 'Yes', '30 days',  ['Marketing','Software'], 'Infinity Squared Lim…'],
+  ['Panda - Master Services Agreement',                 'IC-49', '12 August 2020',   '1 year',   'Yes', '45 days',  ['Software'], 'Infinity Squared Lim…'],
+  ['People4U - Supplier Agreement',                     'IC-60', '27 September 2022','12 months','Yes', 'No Value', ['Recruitment'], 'Infinity Limited'],
+  ['Pothos - Master Services Agreement',                'IC-05', '16 June 2023',     '3 years',  'Yes', '90 days',  ['Recruitment','Software'], 'Infinity Limited'],
+  ['Pothos - Order Form (Payroll Services)',            'IC-15', '1 January 2024',   '24 months','Yes', '90 days',  ['Recruitment','Software'], 'Infinity Limited'],
+];
+
+const tbody = document.getElementById('agr-tbody');
+TABLE_ROWS.forEach((r, i) => {
+  const tr = document.createElement('tr');
+  tr.dataset.idx = i;
+  const labels = r[6].map(l => `<span class="label-tag">${l}</span>`).join('');
+  const isMuted = (txt) => /^(no value)$/i.test(txt);
+  tr.innerHTML = `<td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td class="${isMuted(r[3]) ? 'muted' : ''}">${r[3]}</td><td data-col="auto">${r[4]}</td><td class="${isMuted(r[5]) ? 'muted' : ''}">${r[5]}</td><td>${labels}</td><td>${r[7]}</td>`;
+  tbody.appendChild(tr);
+});
+
+const $ = (sel, root=document) => root.querySelector(sel);
+const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+const sceneEls = {
+  board:  document.getElementById('scene-board'),
+  table:  document.getElementById('scene-table'),
+  detail: document.getElementById('scene-detail'),
+};
+
+function showScene(name) {
+  Object.entries(sceneEls).forEach(([k, el]) => el.classList.toggle('active', k === name));
+}
+function setText(id, txt) { const el = document.getElementById(id); if (el) el.textContent = txt; }
+
+const cursor = document.getElementById('cursor');
+function moveCursor(targetEl, opts={}) {
+  if (!targetEl) return;
+  const stage = document.getElementById('stage');
+  const stageRect = stage.getBoundingClientRect();
+  const tr = targetEl.getBoundingClientRect();
+  const offX = opts.offX ?? 0;
+  const offY = opts.offY ?? 0;
+  const x = tr.left - stageRect.left + (opts.fromCenter ? tr.width/2 : 0) + offX;
+  const y = tr.top  - stageRect.top  + (opts.fromCenter ? tr.height/2 : 0) + offY;
+  cursor.style.left = (x / stageRect.width  * 100) + '%';
+  cursor.style.top  = (y / stageRect.height * 100) + '%';
+}
+function showCursor(show=true) { cursor.classList.toggle('show', show); }
+
+function resetAll() {
+  setText('docs-count', '0');
+  setText('agr-count', '0');
+  $('#agr-meta').style.opacity = '0';
+
+  docsList.querySelectorAll('.doc-card').forEach(el => el.remove());
+  DOC_FILES.forEach((f, i) => {
+    const el = document.createElement('div');
+    el.className = 'doc-card';
+    el.dataset.idx = i;
+    el.dataset.group = f.group;
+    const ext = extOf(f.name);
+    el.innerHTML = `<span class="file-icon">${fileIconSVG(ext)}</span><span class="name">${f.name}</span>`;
+    el.style.opacity = '0';
+    docsList.appendChild(el);
+  });
+  $('#dup-banner').classList.remove('show');
+  $('#dup-banner').style.display = 'none';
+
+  $$('.agreement-card').forEach(el => el.remove());
+  const layer = $('#link-layer');
+  layer.innerHTML = '';
+
+  $$('#agr-tbody tr').forEach(tr => tr.classList.remove('show', 'hover'));
+  $('#tooltip').classList.remove('show');
+
+  $$('.dp-row').forEach(r => r.classList.remove('hl'));
+  const docScroll = $('#doc-scroll');
+  docScroll.style.transition = 'none';
+  docScroll.style.transform = 'translateY(0)';
+  $$('.doc-block.hl').forEach(b => b.classList.remove('is-auto-active'));
+
+  cursor.classList.remove('show');
+  cursor.style.transition = 'none';
+  cursor.style.left = '15%';
+  cursor.style.top  = '20%';
+
+  void document.body.offsetWidth;
+  $$('.doc-card', docsList).forEach(el => el.style.removeProperty('transition'));
+  cursor.style.removeProperty('transition');
+  docScroll.style.removeProperty('transition');
+}
+
+let loopAbort = null;
+function abortable() { return { aborted: false }; }
+
+async function waitOrAbort(ms, ctrl) {
+  await sleep(ms);
+  if (ctrl.aborted) throw 'abort';
+}
+
+async function scene1(ctrl) {
+  showScene('board');
+  resetAll();
+  await waitOrAbort(250, ctrl);
+
+  const stage = document.getElementById('stage');
+  const cards = $$('.doc-card', docsList);
+  const dropAt = [0, 320, 640, 960, 1280];
+
+  let counter = 0;
+  for (let i = 0; i < cards.length; i++) {
+    const c = cards[i];
+    const f = DOC_FILES[i];
+    setTimeout(() => {
+      const slot = c.getBoundingClientRect();
+      const stageR = stage.getBoundingClientRect();
+      const ghost = document.createElement('div');
+      ghost.className = 'flyer';
+      ghost.innerHTML = `<span class="file-icon">${fileIconSVG(extOf(f.name))}</span><span class="name">${f.name}</span>`;
+      ghost.style.width = slot.width + 'px';
+      const startX = (slot.left - stageR.left) + slot.width * 0.35;
+      const startY = -80;
+      const endX   = (slot.left - stageR.left);
+      const endY   = (slot.top  - stageR.top);
+      ghost.style.left = startX + 'px';
+      ghost.style.top  = startY + 'px';
+      stage.appendChild(ghost);
+      const dx = endX - startX;
+      const dy = endY - startY;
+      const a = ghost.animate([
+        { transform: 'translate(0,0) rotate(-6deg) scale(1.04)', opacity: 0, boxShadow: '0 12px 28px rgba(40,39,49,0)' },
+        { transform: `translate(${dx*0.55}px, ${dy*0.6}px) rotate(-3deg) scale(1.03)`, opacity: 1, boxShadow: '0 14px 28px rgba(40,39,49,0.20)', offset: 0.55 },
+        { transform: `translate(${dx}px, ${dy}px) rotate(0deg) scale(1)`, opacity: 1, boxShadow: '0 0 0 rgba(40,39,49,0)' },
+      ], { duration: 460, easing: 'cubic-bezier(.4,0,.2,1)', fill: 'forwards' });
+      a.onfinish = () => { c.style.transition = 'none'; c.style.transform = 'none'; c.style.opacity = '1'; ghost.remove(); };
+      counter++;
+      setText('docs-count', String(counter));
+    }, dropAt[i]);
+  }
+
+  await waitOrAbort(1740 + 80, ctrl);
+  await mergeDuplicatesOnLeft(ctrl);
+  await waitOrAbort(200, ctrl);
+}
+
+async function mergeDuplicatesOnLeft(ctrl) {
+  const cards = $$('.doc-card', docsList);
+  const pothos = cards.filter(c => c.dataset.group === 'pothos');
+  if (pothos.length < 2) return;
+  const [a, b] = pothos;
+  a.style.transition = 'background-color 160ms ease-in-out, border-color 160ms ease-in-out';
+  b.style.transition = 'background-color 160ms ease-in-out, border-color 160ms ease-in-out';
+  a.style.background = 'var(--light-orange)';
+  b.style.background = 'var(--light-orange)';
+  a.style.borderColor = 'var(--orange)';
+  b.style.borderColor = 'var(--orange)';
+  await waitOrAbort(160, ctrl);
+  const aR = a.getBoundingClientRect();
+  const bR = b.getBoundingClientRect();
+  const dy = aR.top - bR.top;
+  b.animate([{ transform: 'translate(0,0)', opacity: 1 }, { transform: `translate(0, ${dy}px) scale(0.98)`, opacity: 0 }], { duration: 240, easing: 'cubic-bezier(.4,0,.2,1)', fill: 'forwards' });
+  setTimeout(() => {
+    b.style.transition = 'height 200ms ease-in-out, margin 200ms ease-in-out, padding 200ms ease-in-out, border-width 200ms ease-in-out';
+    const h = b.offsetHeight;
+    b.style.height = h + 'px';
+    void b.offsetWidth;
+    b.style.height = '0px'; b.style.marginTop = '0px'; b.style.marginBottom = '0px';
+    b.style.paddingTop = '0px'; b.style.paddingBottom = '0px'; b.style.borderWidth = '0px';
+  }, 240);
+  await waitOrAbort(240, ctrl);
+  a.classList.add('is-duplicate-merged');
+  a.innerHTML = `<span class="file-icon dup-icon"><svg viewBox="0 0 18 22" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="4" width="11" height="14" rx="1.4" fill="#FFFFFF" stroke="#994F00" stroke-width="1"/><rect x="5" y="6" width="11" height="14" rx="1.4" fill="#FFF5EB" stroke="#994F00" stroke-width="1"/></svg></span><span class="name"><b>1 exact duplicate</b> &middot; Pothos copy ES markup FINAL</span>`;
+  a.dataset.merged = 'true';
+  await waitOrAbort(60, ctrl);
+}
+
+async function scene2(ctrl) {
+  const stage = document.getElementById('stage');
+  const stageRect = stage.getBoundingClientRect();
+  const layer = $('#link-layer');
+  layer.setAttribute('viewBox', `0 0 ${stageRect.width} ${stageRect.height}`);
+
+  const agrList = $('#agreements-list');
+  agrList.innerHTML = '';
+  AGREEMENTS_RIGHT.forEach(a => {
+    const card = document.createElement('div');
+    card.className = 'agreement-card';
+    card.dataset.group = a.sourceGroup;
+    card.dataset.id = a.id;
+    card.innerHTML = `<div class="agreement-id">${a.id} ${a.title}</div>${a.linked ? `<div class="agreement-link"><svg viewBox="0 0 11 11" fill="none"><path d="M3 5.5C3 4.4 3.9 3.5 5 3.5H6.5" stroke="#6D6A72" stroke-width="0.9"/><path d="M8 5.5C8 6.6 7.1 7.5 6 7.5H4.5" stroke="#6D6A72" stroke-width="0.9"/></svg> Linked to <u>${a.linked}</u></div>` : ''}${a.deps ? `<div class="agreement-link"><svg viewBox="0 0 11 11" fill="none"><path d="M3 5.5C3 4.4 3.9 3.5 5 3.5H6.5" stroke="#6D6A72" stroke-width="0.9"/><path d="M8 5.5C8 6.6 7.1 7.5 6 7.5H4.5" stroke="#6D6A72" stroke-width="0.9"/></svg> ${a.deps}</div>` : ''}${a.children.length ? `<div class="agreement-children">${a.children.map(c => `<div class="child">${c}</div>`).join('')}</div>` : ''}`;
+    agrList.appendChild(card);
+  });
+
+  $('#agr-meta').style.transition = 'opacity 300ms ease-in-out';
+  $('#agr-meta').style.opacity = '1';
+  $('#agr-meta').textContent = 'Viewing 0 out of 42 agreements.';
+
+  const cards = $$('.doc-card', docsList);
+  const byGroup = {};
+  cards.forEach(c => { (byGroup[c.dataset.group] = byGroup[c.dataset.group] || []).push(c); });
+
+  function flyCardTo(srcEl, destEl, opts={}) {
+    return new Promise(resolve => {
+      const sR = srcEl.getBoundingClientRect();
+      const stageR = stage.getBoundingClientRect();
+      const ext = extOf(srcEl.querySelector('.name').textContent);
+      const flyer = document.createElement('div');
+      flyer.className = 'flyer';
+      if (opts.keepStyle) {
+        flyer.innerHTML = srcEl.innerHTML;
+        if (srcEl.dataset.merged === 'true') { flyer.style.background = 'var(--light-orange)'; flyer.style.borderColor = 'var(--orange)'; }
+      } else {
+        flyer.innerHTML = `<span class="file-icon">${fileIconSVG(ext)}</span><span class="name">${srcEl.querySelector('.name').textContent}</span>`;
+      }
+      flyer.style.left = (sR.left - stageR.left) + 'px';
+      flyer.style.top  = (sR.top  - stageR.top)  + 'px';
+      flyer.style.width = sR.width + 'px';
+      stage.appendChild(flyer);
+      const h = srcEl.offsetHeight;
+      srcEl.style.transition = 'none'; srcEl.style.height = h + 'px'; srcEl.style.opacity = '0';
+      void srcEl.offsetWidth;
+      srcEl.style.transition = 'height 280ms ease-in-out, margin 280ms ease-in-out, padding 280ms ease-in-out, border-width 280ms ease-in-out';
+      srcEl.style.height = '0px'; srcEl.style.marginTop = '0px'; srcEl.style.marginBottom = '0px';
+      srcEl.style.paddingTop = '0px'; srcEl.style.paddingBottom = '0px'; srcEl.style.borderWidth = '0px';
+      const dR = destEl.getBoundingClientRect();
+      const dx = (dR.left - stageR.left) - (sR.left - stageR.left);
+      const dy = (dR.top  - stageR.top)  - (sR.top  - stageR.top) + (opts.dyOffset || 0);
+      const flightDur = opts.duration || 500;
+      const morphDur  = 240;
+      const dW = dR.width; const dH = dR.height;
+      const flight = flyer.animate([
+        { transform: 'translate(0,0)', width: sR.width + 'px', height: sR.height + 'px', opacity: 1 },
+        { transform: `translate(${dx}px, ${dy}px)`, width: dW + 'px', height: dH + 'px', opacity: 1 },
+      ], { duration: flightDur, easing: 'cubic-bezier(.55,.05,.25,1)', fill: 'forwards' });
+      flight.onfinish = () => {
+        destEl.classList.add('show');
+        flyer.animate([{ opacity: 1 }, { opacity: 0 }], { duration: morphDur, easing: 'ease-in-out', fill: 'forwards' });
+        setTimeout(() => { flyer.remove(); resolve(); }, morphDur);
+      };
+    });
+  }
+
+  function flyCardOffBottom(srcEl, opts={}) {
+    return new Promise(resolve => {
+      const sR = srcEl.getBoundingClientRect();
+      const stageR = stage.getBoundingClientRect();
+      const ext = extOf(srcEl.querySelector('.name').textContent);
+      const flyer = document.createElement('div');
+      flyer.className = 'flyer is-trash-flyer';
+      flyer.innerHTML = `<span class="file-icon">${fileIconSVG(ext)}</span><span class="name">${srcEl.querySelector('.name').textContent}</span><span class="trash-tag">Not a contract</span>`;
+      flyer.style.left = (sR.left - stageR.left) + 'px';
+      flyer.style.top  = (sR.top  - stageR.top)  + 'px';
+      flyer.style.width = sR.width + 'px';
+      stage.appendChild(flyer);
+      const h = srcEl.offsetHeight;
+      srcEl.style.transition = 'none'; srcEl.style.height = h + 'px'; srcEl.style.opacity = '0';
+      void srcEl.offsetWidth;
+      srcEl.style.transition = 'height 320ms ease-in-out, margin 320ms ease-in-out, padding 320ms ease-in-out, border-width 320ms ease-in-out';
+      srcEl.style.height = '0px'; srcEl.style.marginTop = '0px'; srcEl.style.marginBottom = '0px';
+      srcEl.style.paddingTop = '0px'; srcEl.style.paddingBottom = '0px'; srcEl.style.borderWidth = '0px';
+      const dy = (stageR.height - (sR.top - stageR.top)) + 60;
+      const anim = flyer.animate([
+        { transform: 'translate(0,0) rotate(0)', opacity: 1, boxShadow: '0 4px 14px rgba(40,39,49,0.06)' },
+        { transform: `translate(0, ${dy*0.45}px) rotate(2deg)`, opacity: 1, boxShadow: '0 16px 32px rgba(40,39,49,0.18)', offset: 0.4 },
+        { transform: `translate(0, ${dy}px) rotate(4deg)`, opacity: 0 },
+      ], { duration: opts.duration || 700, easing: 'cubic-bezier(.4,0,.2,1)', fill: 'forwards' });
+      anim.onfinish = () => { flyer.remove(); resolve(); };
+    });
+  }
+
+  (async () => {
+    const pothos = byGroup['pothos'] || [];
+    const merged = pothos.find(c => c.dataset.merged === 'true') || pothos[0];
+    if (merged) { const dest = $('.agreement-card[data-group="pothos"]'); await flyCardTo(merged, dest, { duration: 700, keepStyle: true }); }
+  })();
+  (async () => {
+    const trash = byGroup['trash'] || [];
+    if (trash.length) await flyCardOffBottom(trash[0], { duration: 1500 });
+  })();
+
+  await waitOrAbort(320, ctrl);
+  (async () => { const apex = byGroup['apex'] || []; if (apex.length) { const dest = $('.agreement-card[data-group="apex"]'); await flyCardTo(apex[0], dest, { duration: 700 }); } })();
+  await waitOrAbort(320, ctrl);
+  (async () => { const panda = byGroup['panda'] || []; if (panda.length) { const dest = $('.agreement-card[data-group="panda"]'); await flyCardTo(panda[0], dest, { duration: 700 }); } })();
+
+  (async () => {
+    await sleep(200);
+    rampCounter('docs-count', 5, 0, 1100);
+    rampCounter('agr-count',  0, 42, 1300);
+  })();
+  await waitOrAbort(500, ctrl);
+}
+
+function rampCounter(id, from, to, dur) {
+  const el = document.getElementById(id);
+  const start = performance.now();
+  function step(now) {
+    const t = Math.min(1, (now - start) / dur);
+    const e = t < 0.5 ? 2*t*t : 1 - Math.pow(-2*t+2,2)/2;
+    el.textContent = String(Math.round(from + (to - from) * e));
+    if (t < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+async function scene3(ctrl) {
+  showScene('table');
+  await waitOrAbort(150, ctrl);
+  const rows = $$('#agr-tbody tr');
+  rows.forEach((tr, i) => { setTimeout(() => tr.classList.add('show'), i * 70); });
+  await waitOrAbort((rows.length - 1) * 70 + 500, ctrl);
+}
+
+async function scene4(ctrl) {
+  showScene('table');
+  const fameRow = $('#agr-tbody tr[data-idx="5"]');
+  const cell = fameRow.querySelector('td[data-col="auto"]');
+  showCursor(true);
+  cursor.style.transition = 'top 700ms cubic-bezier(.4,0,.2,1), left 700ms cubic-bezier(.4,0,.2,1), opacity 200ms ease-in-out';
+  await sleep(40);
+  moveCursor(cell, { fromCenter: true });
+  await waitOrAbort(750, ctrl);
+  fameRow.classList.add('hover');
+  const tooltip = $('#tooltip');
+  const stage = document.getElementById('stage');
+  const sR = stage.getBoundingClientRect();
+  const cR = cell.getBoundingClientRect();
+  tooltip.style.top  = (cR.top  - sR.top) - 8 + 'px';
+  tooltip.style.left = (cR.left - sR.left) + 6 + 'px';
+  tooltip.classList.add('show');
+  await waitOrAbort(1500, ctrl);
+}
+
+async function scene5(ctrl) {
+  const fameRow = $('#agr-tbody tr[data-idx="5"]');
+  const titleCell = fameRow.querySelector('td:first-child');
+  $('#tooltip').classList.remove('show');
+  moveCursor(titleCell, { fromCenter: true });
+  await waitOrAbort(450, ctrl);
+  cursor.animate([{ transform: 'scale(1)' }, { transform: 'scale(0.85)' }, { transform: 'scale(1)' }], { duration: 280, easing: 'ease-in-out' });
+  await waitOrAbort(280, ctrl);
+  showScene('detail');
+  showCursor(false);
+  await waitOrAbort(700, ctrl);
+}
+
+async function scene6(ctrl) {
+  showScene('detail');
+  const docScroll = $('#doc-scroll');
+  docScroll.style.transition = 'none';
+  docScroll.style.transform = 'translateY(0)';
+  void docScroll.offsetWidth;
+  docScroll.style.transition = 'transform 1300ms ease-in-out';
+  await waitOrAbort(180, ctrl);
+  $$('.dp-row').forEach(r => r.classList.remove('hl'));
+  $$('.doc-block.hl').forEach(b => b.classList.remove('is-auto-active'));
+  docScroll.style.transition = 'transform 950ms ease-in-out';
+  docScroll.style.transform = 'translateY(-120px)';
+  await waitOrAbort(950, ctrl);
+  $('.dp-row[data-key="auto"]')?.classList.add('hl');
+  $('#block-term')?.classList.add('is-auto-active');
+  docScroll.style.transform = 'translateY(-260px)';
+  await waitOrAbort(1100, ctrl);
+  await waitOrAbort(250, ctrl);
+}
+
+async function runLoop() {
+  const ctrl = abortable();
+  loopAbort = ctrl;
+  try {
+    while (!ctrl.aborted) {
+      const loopStart = performance.now();
+      resetAll();
+      showScene('board');
+      sceneEls.board.classList.add('active');
+      sceneEls.table.classList.remove('active');
+      sceneEls.detail.classList.remove('active');
+
+      const runScene = async (sceneFn, key) => {
+        await sceneFn(ctrl);
+        const elapsed = performance.now() - loopStart;
+        const pad = TIMING[key].end - elapsed;
+        if (pad > 0) await waitOrAbort(pad, ctrl);
+      };
+
+      await runScene(scene1, 's1');
+      await runScene(scene2, 's2');
+      await runScene(scene3, 's3');
+      await runScene(scene4, 's4');
+      await runScene(scene5, 's5');
+      await runScene(scene6, 's6');
+
+      sceneEls.detail.style.transition = 'opacity 400ms ease-in-out';
+      sceneEls.detail.classList.remove('active');
+      await waitOrAbort(420, ctrl);
+    }
+  } catch (e) {
+    if (e !== 'abort') console.warn(e);
+  }
+}
+
+window.addEventListener('load', () => { runLoop(); });
+</script>
+</body>
+</html>

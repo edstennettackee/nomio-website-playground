@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Nomio - Spreadsheet</title>
+<style>
+  :root {
+    --black: #282731;
+    --gray-xdark: #6D6A72;
+    --gray-dark: #CCC6CC;
+    --gray-light: #EDEBED;
+    --gray-xlight: #F8F7F8;
+    --light-green: #F0FFF7;
+    --green: #4FA46A;
+    --red: #FF8985;
+    --select-blue: #B4D8FB;
+    --sheet-blue: #1A73E8;
+    --white: #FFFFFF;
+    --ease: cubic-bezier(.4, 0, .2, 1);
+    --ease-out: cubic-bezier(.2, .7, .2, 1);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    width: 100%; height: 100%;
+    background: var(--light-green);
+    font-family: 'Inter Tight', system-ui, -apple-system, sans-serif;
+    color: var(--black);
+    overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .canvas-wrap {
+    width: 340px; height: 200px;
+    max-width: 100vw; max-height: 100vh;
+    position: relative;
+  }
+
+  .canvas {
+    position: absolute; inset: 0;
+    background: var(--light-green);
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+  }
+
+  .sheet {
+    position: relative;
+    border: 1px solid var(--gray-dark);
+    background: var(--white);
+    border-collapse: collapse;
+    font-size: 10.5px;
+    color: var(--black);
+    box-shadow: 0 4px 14px rgba(40,39,49,0.08);
+    border-radius: 2px;
+    overflow: visible;
+    opacity: 0;
+    transition: opacity 320ms var(--ease);
+  }
+  .sheet.show { opacity: 1; }
+
+  .sheet table { border-collapse: collapse; }
+  .sheet th, .sheet td {
+    border: 1px solid var(--gray-light);
+    padding: 5px 8px;
+    text-align: left;
+    font-weight: 400;
+    height: 22px;
+    background: var(--white);
+    position: relative;
+  }
+  .sheet thead th {
+    background: var(--gray-light);
+    color: var(--gray-xdark);
+    font-weight: 500;
+    font-size: 9.5px;
+    text-align: center;
+    padding: 3px 8px;
+    height: auto;
+  }
+  .sheet td.row-num,
+  .sheet th.row-num {
+    background: var(--gray-light);
+    color: var(--gray-xdark);
+    font-weight: 500;
+    font-size: 9.5px;
+    text-align: center;
+    width: 22px;
+    padding: 3px 0;
+  }
+  .sheet td.row-num { height: 22px; }
+  .sheet td.col-head {
+    color: var(--gray-xdark);
+    font-weight: 500;
+    background: var(--gray-xlight);
+  }
+  .sheet td.cell { min-width: 78px; }
+  .sheet td.cell.contract { min-width: 70px; }
+  .sheet td.cell.date { min-width: 78px; font-variant-numeric: tabular-nums; }
+
+  .cell.selected { box-shadow: inset 0 0 0 2px var(--sheet-blue); z-index: 2; }
+
+  .cell .cell-text { display: inline-block; }
+  .cell .cell-text.selected-text { background: var(--select-blue); border-radius: 1px; }
+  .cell .caret {
+    display: none;
+    width: 1px; height: 12px;
+    background: var(--black);
+    vertical-align: -2px;
+    margin-left: 1px;
+  }
+  .cell.editing .caret { display: inline-block; animation: caret-blink 1s steps(2,start) infinite; }
+  @keyframes caret-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+  .err-tri {
+    position: absolute; top: 0; right: 0;
+    width: 0; height: 0;
+    border-top: 6px solid var(--red);
+    border-left: 6px solid transparent;
+    opacity: 0;
+    transition: opacity 320ms var(--ease);
+  }
+  .err-tri.show { opacity: 1; }
+
+  .cell .cell-text.error { color: var(--red); transition: color 240ms var(--ease); }
+
+  .err-tooltip {
+    position: absolute;
+    top: 100%; right: -8px; margin-top: 4px;
+    background: var(--black); color: var(--white);
+    border-radius: 4px; padding: 5px 8px;
+    font-size: 9px; line-height: 1.3;
+    white-space: nowrap;
+    opacity: 0; transform: translateY(-4px);
+    transition: opacity 280ms var(--ease), transform 280ms var(--ease);
+    z-index: 10; pointer-events: none;
+    box-shadow: 0 4px 12px rgba(40,39,49,0.2);
+  }
+  .err-tooltip.show { opacity: 1; transform: translateY(0); }
+
+  .tick {
+    position: absolute;
+    top: 50%; left: calc(100% + 6px);
+    transform: translateY(-50%) scale(0.6);
+    width: 14px; height: 14px;
+    border-radius: 50%; background: var(--green); color: var(--white);
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0;
+    transition: opacity 320ms var(--ease), transform 320ms var(--ease);
+    z-index: 8;
+  }
+  .tick.show { opacity: 1; transform: translateY(-50%) scale(1); }
+  .tick svg { width: 8px; height: 8px; }
+
+  .cursor {
+    position: absolute;
+    width: 14px; height: 17px;
+    pointer-events: none; z-index: 100;
+    opacity: 0;
+    filter: drop-shadow(0 1px 2px rgba(40,39,49,0.25));
+    transition: opacity 280ms var(--ease), transform 700ms var(--ease-out);
+  }
+  .cursor.show { opacity: 1; }
+  @media (max-width: 360px), (max-height: 220px) { .canvas-wrap { transform: scale(0.85); } }
+</style>
+</head>
+<body>
+
+<div class="canvas-wrap">
+  <div class="canvas" id="canvas">
+    <div class="sheet" id="sheet">
+      <table>
+        <thead>
+          <tr>
+            <th class="row-num"></th>
+            <th>A</th>
+            <th>B</th>
+            <th>C</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="row-num">1</td>
+            <td class="cell col-head contract">Contract</td>
+            <td class="cell col-head">Party</td>
+            <td class="cell col-head date">Expiry</td>
+          </tr>
+          <tr>
+            <td class="row-num">2</td>
+            <td class="cell contract">Pothos - MSA</td>
+            <td class="cell">Pothos Technologies</td>
+            <td class="cell date">16/06/2026</td>
+          </tr>
+          <tr>
+            <td class="row-num">3</td>
+            <td class="cell contract">Apex - MSA</td>
+            <td class="cell">Apex Cloud Ltd</td>
+            <td class="cell date" id="target-cell">
+              <span class="cell-text" id="target-text">29/02/2027</span><span class="caret"></span>
+              <div class="err-tri" id="err-tri"></div>
+              <div class="err-tooltip" id="err-tooltip">Invalid date: 29 Feb 2027 does not exist</div>
+              <div class="tick" id="tick"><svg viewBox="0 0 8 8" fill="none"><path d="M1.5 4L3.5 6L6.5 2" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            </td>
+          </tr>
+          <tr>
+            <td class="row-num">4</td>
+            <td class="cell contract">Panda - MSA</td>
+            <td class="cell">Panda Corp</td>
+            <td class="cell date">12/08/2025</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <svg class="cursor" id="cursor" viewBox="0 0 18 22" fill="none">
+      <path d="M2 1.5L2 17.5L6 14L8.5 19.5L11 18.5L8.5 13L13 13L2 1.5Z" fill="white" stroke="#282731" stroke-width="1.2" stroke-linejoin="round"/>
+    </svg>
+  </div>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+const canvas = $('#canvas');
+const sheet = $('#sheet');
+const targetCell = $('#target-cell');
+const targetText = $('#target-text');
+const errTri = $('#err-tri');
+const errTooltip = $('#err-tooltip');
+const tick = document.querySelector('.tick');
+const cursor = $('#cursor');
+
+const TOTAL = 7500;
+let abortLoop = false;
+
+function moveCursorTo(left, top) {
+  cursor.style.transform = `translate(${left}px, ${top}px)`;
+}
+
+function placeCursorAt(left, top) {
+  cursor.style.transition = 'none';
+  cursor.style.transform = `translate(${left}px, ${top}px)`;
+  void cursor.offsetWidth;
+  cursor.style.transition = 'opacity 280ms var(--ease), transform 700ms var(--ease-out)';
+}
+
+async function typeInto(el, text, delay) {
+  for (let i = 0; i < text.length; i++) {
+    el.textContent += text[i];
+    await sleep(delay);
+  }
+}
+
+
+async function reset() {
+  sheet.classList.remove('show');
+  errTri.classList.remove('show');
+  errTooltip.classList.remove('show');
+  tick.classList.remove('show');
+  targetText.classList.remove('error', 'selected-text');
+  targetCell.classList.remove('editing');
+  targetText.textContent = '29/02/2027';
+  cursor.classList.remove('show');
+  void document.body.offsetWidth;
+}
+
+async function runLoop() {
+  while (!abortLoop) {
+    await reset();
+    const start = performance.now();
+    const tick2 = () => {
+      const t = (performance.now() - start) / TOTAL;
+      if (t < 1 && !abortLoop) requestAnimationFrame(tick2);
+    };
+    requestAnimationFrame(tick2);
+
+    sheet.classList.add('show');
+    await sleep(950);
+
+    errTri.classList.add('show');
+    targetText.classList.add('error');
+    await sleep(180);
+    errTooltip.classList.add('show');
+    await sleep(820);
+
+    const canvasR = canvas.getBoundingClientRect();
+    const cellR = targetCell.getBoundingClientRect();
+    placeCursorAt(canvasR.width - 30, canvasR.height - 30);
+    cursor.classList.add('show');
+    await sleep(40);
+    moveCursorTo(cellR.left - canvasR.left + cellR.width/2 - 4, cellR.top - canvasR.top + 4);
+    await sleep(420);
+
+    errTooltip.classList.remove('show');
+    targetText.classList.remove('error');
+    targetCell.classList.add('editing');
+    targetText.classList.add('selected-text');
+    await sleep(120);
+
+    targetText.classList.remove('selected-text');
+    targetText.textContent = '';
+    await typeInto(targetText, '01/03/2027', 80);
+
+    moveCursorTo(cellR.left - canvasR.left + cellR.width + 30, cellR.top - canvasR.top - 14);
+    targetCell.classList.remove('editing');
+    errTri.classList.remove('show');
+    await sleep(420);
+
+    tick.classList.add('show');
+    await sleep(450);
+    cursor.classList.remove('show');
+
+    await sleep(1200);
+    tick.classList.remove('show');
+    await sleep(280);
+
+    sheet.classList.remove('show');
+    await sleep(450);
+  }
+}
+
+runLoop();
+window.addEventListener('beforeunload', () => { abortLoop = true; });
+</script>
+</body>
+</html>

@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Nomio - Search Frustration</title>
+<style>
+  :root {
+    --black: #282731;
+    --gray-xdark: #6D6A72;
+    --gray-dark: #CCC6CC;
+    --gray-light: #EDEBED;
+    --gray-xlight: #F8F7F8;
+    --light-blue: #F0FCFF;
+    --red: #FF8985;
+    --select-blue: #B4D8FB;
+    --white: #FFFFFF;
+    --ease: cubic-bezier(.4, 0, .2, 1);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    width: 100%; height: 100%;
+    background: var(--light-blue);
+    font-family: 'Inter Tight', system-ui, -apple-system, sans-serif;
+    color: var(--black);
+    overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .canvas-wrap {
+    width: 340px; height: 200px;
+    max-width: 100vw; max-height: 100vh;
+    position: relative;
+  }
+
+  .canvas {
+    position: absolute; inset: 0;
+    background: var(--light-blue);
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+  }
+
+  .findbar {
+    width: 280px; height: 36px;
+    background: var(--white);
+    border: 1px solid var(--gray-light);
+    border-radius: 6px;
+    box-shadow: 0 6px 16px rgba(40,39,49,0.08), 0 1px 0 rgba(40,39,49,0.04);
+    display: flex; align-items: center;
+    padding: 0 6px 0 10px;
+    font-size: 12.5px;
+    color: var(--black);
+    opacity: 0;
+    transition: opacity 320ms var(--ease);
+  }
+  .findbar.show { opacity: 1; }
+  .findbar.shake { animation: shake 220ms var(--ease); }
+  .findbar.flash { animation: flash 180ms var(--ease); }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-3px); }
+    40% { transform: translateX(3px); }
+    60% { transform: translateX(-2px); }
+    80% { transform: translateX(2px); }
+  }
+  @keyframes flash {
+    0%, 100% { background: var(--white); }
+    50% { background: var(--gray-light); }
+  }
+
+  .input-area {
+    flex: 1 1 auto;
+    display: flex; align-items: center;
+    height: 100%;
+    overflow: hidden;
+    position: relative;
+  }
+  .typed {
+    display: inline-block;
+    color: var(--black);
+    white-space: nowrap;
+    position: relative;
+  }
+  .typed.selected {
+    background: var(--select-blue);
+    border-radius: 2px;
+    padding: 0 1px;
+    margin: 0 -1px;
+  }
+  .caret {
+    display: inline-block;
+    width: 1px;
+    height: 14px;
+    background: var(--black);
+    margin-left: 1px;
+    vertical-align: -2px;
+    animation: caret-blink 1s steps(2, start) infinite;
+  }
+  .caret.hidden { opacity: 0; animation: none; }
+  @keyframes caret-blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+
+  .counter {
+    flex: 0 0 auto;
+    color: var(--gray-xdark);
+    font-size: 11.5px;
+    font-variant-numeric: tabular-nums;
+    margin-right: 8px;
+    transition: color 240ms var(--ease), transform 320ms var(--ease);
+    transform-origin: center;
+  }
+  .counter.error { color: var(--red); }
+  .counter.pulse { animation: counter-pulse 480ms var(--ease); }
+  @keyframes counter-pulse {
+    0%, 100% { transform: scale(1); }
+    40% { transform: scale(1.12); }
+  }
+
+  .controls {
+    flex: 0 0 auto;
+    display: flex; align-items: center; gap: 2px;
+    color: var(--gray-xdark);
+  }
+  .ctl-btn {
+    width: 22px; height: 22px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border-radius: 4px;
+    transition: background-color 200ms var(--ease);
+  }
+  .ctl-btn svg { width: 9px; height: 9px; }
+  .ctl-divider {
+    width: 1px; height: 16px;
+    background: var(--gray-light);
+    margin: 0 4px;
+  }
+
+
+  @media (max-width: 360px), (max-height: 220px) {
+    .canvas-wrap { transform: scale(0.85); }
+  }
+</style>
+</head>
+<body>
+
+<div class="canvas-wrap">
+  <div class="canvas">
+    <div class="findbar" id="findbar">
+      <div class="input-area">
+        <span class="typed" id="typed"></span><span class="caret" id="caret"></span>
+      </div>
+      <span class="counter" id="counter">0/0</span>
+      <div class="controls">
+        <span class="ctl-btn"><svg viewBox="0 0 9 9" fill="none"><path d="M2 5.5 L4.5 3 L7 5.5" stroke="#6D6A72" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        <span class="ctl-btn"><svg viewBox="0 0 9 9" fill="none"><path d="M2 3.5 L4.5 6 L7 3.5" stroke="#6D6A72" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        <span class="ctl-divider"></span>
+        <span class="ctl-btn"><svg viewBox="0 0 9 9" fill="none"><path d="M2 2 L7 7 M7 2 L2 7" stroke="#6D6A72" stroke-width="1.2" stroke-linecap="round"/></svg></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+const findbar = $('#findbar');
+const typed = $('#typed');
+const caret = $('#caret');
+const counter = $('#counter');
+
+const TOTAL = 6000;
+let abortLoop = false;
+
+async function typeText(str, perCharFn) {
+  for (let i = 0; i < str.length; i++) {
+    typed.textContent += str[i];
+    await sleep(perCharFn(i, str));
+  }
+}
+
+function setCounter(text, opts = {}) {
+  counter.textContent = text;
+  counter.classList.toggle('error', !!opts.error);
+  if (opts.pulse) {
+    counter.classList.remove('pulse');
+    void counter.offsetWidth;
+    counter.classList.add('pulse');
+  }
+}
+
+async function selectAndClear(instant = false) {
+  typed.classList.add('selected');
+  caret.classList.add('hidden');
+  await sleep(instant ? 80 : 220);
+  typed.textContent = '';
+  typed.classList.remove('selected');
+  caret.classList.remove('hidden');
+  if (instant) {
+    findbar.classList.remove('flash');
+    void findbar.offsetWidth;
+    findbar.classList.add('flash');
+  }
+  await sleep(instant ? 60 : 140);
+}
+
+async function shakeBar() {
+  findbar.classList.remove('shake');
+  void findbar.offsetWidth;
+  findbar.classList.add('shake');
+}
+
+async function reset() {
+  typed.textContent = '';
+  typed.classList.remove('selected');
+  caret.classList.remove('hidden');
+  setCounter('0/0', { error: false });
+  findbar.classList.remove('show');
+  void findbar.offsetWidth;
+}
+
+async function runLoop() {
+  while (!abortLoop) {
+    await reset();
+    const start = performance.now();
+    const tick = () => {
+      const t = (performance.now() - start) / TOTAL;
+      if (t < 1 && !abortLoop) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+
+    findbar.classList.add('show');
+    await sleep(300);
+
+    await typeText('terminate', () => 78);
+
+    setCounter('Phrase not found', { error: true });
+    await sleep(140);
+    shakeBar();
+    await sleep(360);
+
+    await selectAndClear(false);
+
+    const unevenDelays = [80, 105, 70, 95, 110, 65, 90, 75, 100, 60, 85];
+    let idx = 0;
+    await typeText('terminating', () => unevenDelays[idx++ % unevenDelays.length]);
+
+    setCounter('Phrase not found', { error: true });
+    await sleep(120);
+    shakeBar();
+    await sleep(380);
+
+    await selectAndClear(true);
+
+    const fastDelays = [60, 55, 70, 50, 65, 55, 75, 60, 50, 70, 55];
+    let fIdx = 0;
+    await typeText('termination', () => fastDelays[fIdx++ % fastDelays.length]);
+
+    setCounter('1/19', { error: false, pulse: true });
+    await sleep(1000);
+
+    findbar.classList.remove('show');
+    await sleep(600);
+  }
+}
+
+runLoop();
+window.addEventListener('beforeunload', () => { abortLoop = true; });
+</script>
+</body>
+</html>

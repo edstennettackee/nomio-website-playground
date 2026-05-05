@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Nomio - Managed</title>
+<style>
+  :root {
+    --black: #282731;
+    --gray-xdark: #6D6A72;
+    --gray-dark: #CCC6CC;
+    --gray: #D7D2D7;
+    --gray-light: #EDEBED;
+    --gray-xlight: #F8F7F8;
+    --light-purple: #F0F0FF;
+    --light-orange: #FFF5EB;
+    --orange: #FFB566;
+    --light-pink: #FFF5FF;
+    --pink: #FFA8FF;
+    --white: #FFFFFF;
+    --ease: cubic-bezier(.4, 0, .2, 1);
+    --ease-out: cubic-bezier(.2, .7, .2, 1);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    width: 100%; height: 100%;
+    background: var(--light-purple);
+    font-family: 'Inter Tight', system-ui, -apple-system, sans-serif;
+    color: var(--black);
+    overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .canvas-wrap {
+    width: 512px; height: 580px;
+    max-width: 100vw; max-height: 100vh;
+    position: relative;
+  }
+
+  .canvas {
+    position: absolute; inset: 0;
+    background: var(--light-purple);
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+  }
+
+  .ui {
+    position: relative;
+    width: 448px; height: 516px;
+    background: var(--white);
+    border: 1px solid var(--gray-light);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .scene { position: absolute; inset: 0; opacity: 0; transition: opacity 420ms var(--ease); }
+  .scene.active { opacity: 1; }
+
+  .list-pad { position: absolute; inset: 0; padding: 24px 28px; }
+  .col-title { font-size: 18px; font-weight: 600; color: var(--black); margin-bottom: 12px; }
+  .search {
+    display: flex; align-items: center; gap: 8px;
+    border-bottom: 1px solid var(--gray-light);
+    padding: 8px 4px 10px 4px;
+    color: var(--gray-xdark); font-size: 13px; margin-bottom: 18px;
+  }
+  .search svg { width: 12px; height: 12px; flex: 0 0 12px; }
+
+  .agreement-card {
+    background: var(--white);
+    border: 1px solid transparent;
+    border-radius: 8px; padding: 12px 14px; margin-bottom: 10px;
+    position: relative;
+    transition: margin-left 700ms var(--ease), border-color 320ms var(--ease), background-color 320ms var(--ease);
+  }
+  @keyframes caret-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+  .agreement-card.linked-child { margin-left: 18px; }
+  .agreement-id { font-size: 11px; color: var(--gray-xdark); letter-spacing: 0.02em; margin-bottom: 4px; display: none; }
+  .agreement-id.show { display: block; }
+  .agreement-title { font-size: 13.5px; font-weight: 500; color: var(--black); line-height: 1.3; position: relative; overflow: hidden; }
+  .agreement-title .sparkle { display: inline-block; width: 12px; height: 12px; margin-right: 4px; vertical-align: -2px; opacity: 0; transition: opacity 320ms var(--ease); }
+  .agreement-title .sparkle.show { opacity: 1; }
+
+  .title-text { display: inline; }
+  .title-text .ch {
+    display: inline-block;
+    transition: transform 420ms var(--ease), opacity 420ms var(--ease), filter 420ms var(--ease);
+  }
+  .title-text .ch.out { opacity: 0; transform: translateY(2px) scale(0.85); filter: blur(2px); }
+  .title-text .ch.in-start { opacity: 0; transform: translateY(4px); filter: blur(1px); }
+  .title-text .ch.in { opacity: 1; transform: translateY(0); filter: blur(0); }
+
+  .shimmer {
+    position: absolute; top: 0; bottom: 0; left: -40%; width: 40%;
+    background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.95) 50%, rgba(255,255,255,0) 100%);
+    pointer-events: none; opacity: 0; z-index: 5;
+  }
+  .shimmer.run { animation: shimmer-sweep 800ms var(--ease) forwards; }
+  @keyframes shimmer-sweep {
+    0%   { left: -40%; opacity: 0; }
+    20%  { opacity: 1; }
+    80%  { opacity: 1; }
+    100% { left: 110%; opacity: 0; }
+  }
+
+  .tags { display: flex; gap: 6px; margin-top: 6px; opacity: 0; transform: scale(0.95); transform-origin: left center; transition: opacity 420ms var(--ease), transform 420ms var(--ease); }
+  .tags.show { opacity: 1; transform: scale(1); }
+  .tag { background: var(--gray-light); color: var(--black); font-size: 10px; padding: 2px 7px; border-radius: 4px; line-height: 1.4; font-weight: 500; }
+
+  .linked-caption { font-size: 11px; color: var(--gray-xdark); margin-top: 6px; display: flex; align-items: center; gap: 6px; opacity: 0; transition: opacity 420ms var(--ease); }
+  .linked-caption.show { opacity: 1; }
+  .linked-caption svg { width: 11px; height: 11px; flex: 0 0 11px; }
+  .linked-caption u { text-decoration: underline; text-underline-offset: 2px; }
+
+  .link-svg { position: absolute; pointer-events: none; overflow: visible; z-index: 4; }
+  .link-svg path { fill: none; stroke: var(--gray-dark); stroke-width: 1.2; stroke-dasharray: 1000; stroke-dashoffset: 1000; opacity: 0; transition: stroke-dashoffset 1000ms var(--ease), opacity 500ms var(--ease); }
+  .link-svg.draw path { stroke-dashoffset: 0; opacity: 1; }
+  .link-svg .midicon { opacity: 0; transition: opacity 420ms var(--ease) 700ms; }
+  .link-svg.draw .midicon { opacity: 1; }
+
+  .agreement-card.appear {
+    overflow: hidden; max-height: 0; opacity: 0; margin-bottom: 0; padding-top: 0; padding-bottom: 0; border-top: 0 solid transparent; border-bottom: 0 solid transparent;
+    transition: max-height 750ms var(--ease), opacity 600ms var(--ease) 100ms, margin-bottom 750ms var(--ease), padding-top 750ms var(--ease), padding-bottom 750ms var(--ease);
+  }
+  .agreement-card.appear.in { max-height: 80px; opacity: 1; margin-bottom: 10px; padding-top: 12px; padding-bottom: 12px; }
+  .agreement-card.upload-in { animation: upload-in 750ms var(--ease) both; }
+  @keyframes upload-in { from { opacity: 0; transform: translateY(80px); } to { opacity: 1; transform: translateY(0); } }
+
+  .pdf-icon { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 18px; margin-right: 6px; vertical-align: -3px; }
+
+  .agreement-view { position: absolute; inset: 0; padding: 22px 26px 0 26px; display: flex; flex-direction: column; }
+  .av-id { font-size: 11px; color: var(--gray-xdark); letter-spacing: 0.02em; margin-bottom: 4px; }
+  .av-title { font-size: 18px; font-weight: 600; color: var(--black); line-height: 1.25; margin-bottom: 8px; }
+  .av-tags { display: flex; gap: 6px; margin-bottom: 12px; }
+  .av-toggle { display: inline-flex; align-items: center; background: var(--gray-light); border-radius: 5px; padding: 2px; font-size: 11px; margin-bottom: 18px; align-self: flex-start; }
+  .av-toggle span { padding: 3px 10px; border-radius: 3px; color: var(--gray-xdark); font-weight: 500; }
+  .av-toggle .on { background: var(--black); color: var(--white); }
+
+  .av-scroll { flex: 1 1 auto; overflow: hidden; position: relative; }
+  .av-scroll-inner { transition: transform 1300ms var(--ease); will-change: transform; }
+
+  .av-section { border-top: 1px solid var(--gray-light); }
+  .av-section-head { display: flex; align-items: center; gap: 8px; padding: 10px 4px; font-size: 13px; font-weight: 500; color: var(--black); }
+  .av-section-head .chev { width: 10px; height: 10px; transition: transform 360ms var(--ease); }
+  .av-section.open .chev { transform: rotate(90deg); }
+  .av-section-body { max-height: 0; overflow: hidden; transition: max-height 750ms var(--ease); padding: 0 4px; }
+  .av-section.open .av-section-body { max-height: 600px; }
+  .av-section-body-inner { padding: 4px 0 12px 0; }
+
+  .base-row { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--black); padding: 6px 0; }
+  .base-row svg { width: 12px; height: 12px; flex: 0 0 12px; color: var(--gray-xdark); }
+
+  .dp-row { display: grid; grid-template-columns: 1fr 1fr; padding: 7px 4px; border-bottom: 1px dashed var(--gray-light); align-items: center; font-size: 12px; position: relative; }
+  .dp-key { color: var(--gray-xdark); }
+  .dp-val { color: var(--black); display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+  .dp-val .linkicon { color: var(--gray-xdark); flex: 0 0 12px; }
+  .dp-val .linkicon svg { width: 12px; height: 12px; display: block; }
+
+  .modal {
+    position: absolute; left: 16px; right: 16px;
+    background: var(--black); color: var(--white);
+    border-radius: 7px; padding: 14px 16px;
+    font-size: 12px; line-height: 1.4;
+    box-shadow: 0 8px 24px rgba(40,39,49,0.25);
+    display: flex; align-items: center; gap: 12px;
+    opacity: 0; transform: translateY(8px);
+    transition: opacity 380ms var(--ease), transform 380ms var(--ease);
+    pointer-events: none; z-index: 60;
+  }
+  .modal.show { opacity: 1; transform: translateY(0); }
+  .modal .micon { flex: 0 0 22px; width: 22px; height: 22px; color: var(--white); }
+  .modal .micon svg { width: 22px; height: 22px; }
+  .modal-text small { display: block; color: rgba(255,255,255,0.7); font-size: 10.5px; margin-bottom: 2px; }
+  .modal-text b { font-weight: 500; }
+
+  .cursor {
+    position: absolute; width: 16px; height: 19px;
+    pointer-events: none; z-index: 100;
+    opacity: 0;
+    filter: drop-shadow(0 1px 2px rgba(40,39,49,0.25));
+    transition: opacity 320ms var(--ease), transform 800ms cubic-bezier(.2,.7,.2,1);
+  }
+  .cursor.show { opacity: 1; }
+
+
+  @media (max-width: 540px), (max-height: 600px) { .canvas-wrap { transform: scale(0.85); } }
+</style>
+</head>
+<body>
+
+<div class="canvas-wrap" id="wrap">
+  <div class="canvas">
+    <div class="ui" id="ui">
+
+      <div class="scene active" id="scene-inbox">
+        <div class="list-pad">
+          <div class="col-title" id="ag-count">0 Agreements</div>
+          <div class="search">
+            <svg viewBox="0 0 12 12" fill="none"><circle cx="5" cy="5" r="3.2" stroke="currentColor" stroke-width="1.1"/><path d="M7.4 7.4 L10 10" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>
+            <span>Search agreements</span>
+          </div>
+          <div id="cards-host" style="position: relative;"></div>
+        </div>
+      </div>
+
+      <div class="scene" id="scene-detail">
+        <div class="agreement-view">
+          <div class="av-id">IC-16</div>
+          <div class="av-title">Pothos - Order Form (Data Management)</div>
+          <div class="av-tags">
+            <span class="tag">Recruitment</span>
+            <span class="tag">Software</span>
+          </div>
+          <div class="av-toggle">
+            <span class="on">PDF</span>
+            <span>Smart</span>
+          </div>
+
+          <div class="av-scroll">
+            <div class="av-scroll-inner" id="av-scroll-inner">
+
+              <div class="av-section" id="sec-clause">
+                <div class="av-section-head">
+                  <svg class="chev" viewBox="0 0 10 10" fill="none"><path d="M3 2 L7 5 L3 8" stroke="#6D6A72" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  Clause Search
+                </div>
+              </div>
+
+              <div class="av-section" id="sec-docs">
+                <div class="av-section-head">
+                  <svg class="chev" viewBox="0 0 10 10" fill="none"><path d="M3 2 L7 5 L3 8" stroke="#6D6A72" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  Documents
+                </div>
+              </div>
+
+              <div class="av-section" id="sec-base">
+                <div class="av-section-head">
+                  <svg class="chev" viewBox="0 0 10 10" fill="none"><path d="M3 2 L7 5 L3 8" stroke="#6D6A72" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  Base Agreement
+                </div>
+                <div class="av-section-body">
+                  <div class="av-section-body-inner">
+                    <div class="base-row">
+                      <svg viewBox="0 0 12 12" fill="none"><path d="M3 5 H9 V9 H3 Z M5 5 V3 H7 V5" stroke="currentColor" stroke-width="1"/></svg>
+                      IC-05 Pothos - Master Services Agreement
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="av-section open" id="sec-dp">
+                <div class="av-section-head">
+                  <svg class="chev" viewBox="0 0 10 10" fill="none"><path d="M3 2 L7 5 L3 8" stroke="#6D6A72" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  Data Points
+                </div>
+                <div class="av-section-body">
+                  <div class="av-section-body-inner" id="dp-list">
+                    <div class="dp-row"><div class="dp-key">Primary Party</div><div class="dp-val">Infinity Limited</div></div>
+                    <div class="dp-row"><div class="dp-key">Counterparty</div><div class="dp-val">Pothos, Inc</div></div>
+                    <div class="dp-row"><div class="dp-key">Active Date</div><div class="dp-val">31 Oct 2023</div></div>
+                    <div class="dp-row"><div class="dp-key">Initial Term</div><div class="dp-val">18 months</div></div>
+                    <div class="dp-row"><div class="dp-key">Initial Term Expiry Date</div><div class="dp-val">30 Apr 2025</div></div>
+                    <div class="dp-row"><div class="dp-key">Auto-Renew</div><div class="dp-val">Yes <span class="linkicon"><svg viewBox="0 0 12 12" fill="none"><path d="M4 6 C4 4.9 4.9 4 6 4 H7.5" stroke="currentColor" stroke-width="0.9"/><path d="M8 6 C8 7.1 7.1 8 6 8 H4.5" stroke="currentColor" stroke-width="0.9"/></svg></span></div></div>
+                    <div class="dp-row"><div class="dp-key">Renewal Term</div><div class="dp-val">1 year <span class="linkicon"><svg viewBox="0 0 12 12" fill="none"><path d="M4 6 C4 4.9 4.9 4 6 4 H7.5" stroke="currentColor" stroke-width="0.9"/><path d="M8 6 C8 7.1 7.1 8 6 8 H4.5" stroke="currentColor" stroke-width="0.9"/></svg></span></div></div>
+                    <div class="dp-row"><div class="dp-key">Renewal Date</div><div class="dp-val">30 Apr 2027</div></div>
+                    <div class="dp-row"><div class="dp-key">Renewal Notice Period</div><div class="dp-val">90 days <span class="linkicon"><svg viewBox="0 0 12 12" fill="none"><path d="M4 6 C4 4.9 4.9 4 6 4 H7.5" stroke="currentColor" stroke-width="0.9"/><path d="M8 6 C8 7.1 7.1 8 6 8 H4.5" stroke="currentColor" stroke-width="0.9"/></svg></span></div></div>
+                    <div class="dp-row"><div class="dp-key">Renewal Notice Deadline</div><div class="dp-val">29 Jan 2027</div></div>
+                    <div class="dp-row"><div class="dp-key">Active Status</div><div class="dp-val">Active</div></div>
+                    <div class="dp-row" id="dp-bench"><div class="dp-key">Benchmarking Clause</div><div class="dp-val">Yes <span class="linkicon" id="bench-link"><svg viewBox="0 0 12 12" fill="none"><path d="M4 6 C4 4.9 4.9 4 6 4 H7.5" stroke="currentColor" stroke-width="0.9"/><path d="M8 6 C8 7.1 7.1 8 6 8 H4.5" stroke="currentColor" stroke-width="0.9"/></svg></span></div></div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <div class="modal" id="modal">
+            <div class="micon">
+              <svg viewBox="0 0 22 22" fill="none"><path d="M8 11 C8 9.3 9.3 8 11 8 H14" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M14 11 C14 12.7 12.7 14 11 14 H8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+            </div>
+            <div class="modal-text">
+              <small>Derived from base agreement</small>
+              <b>[IC-05] Pothos - Master Services Agreement</b>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <svg class="cursor" id="cursor" viewBox="0 0 16 19" fill="none">
+        <path d="M1.6 1.4 L1.6 15 L4.8 12 L7 17 L9 16 L7 11 L11 11 L1.6 1.4Z" fill="white" stroke="#282731" stroke-width="1.1" stroke-linejoin="round"/>
+      </svg>
+
+    </div>
+  </div>
+</div>
+
+<script>
+const $  = (s, r=document) => r.querySelector(s);
+const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+const ui = $('#ui');
+const cardsHost = $('#cards-host');
+const cursor = $('#cursor');
+const sceneInbox = $('#scene-inbox');
+const sceneDetail = $('#scene-detail');
+
+const TOTAL = 10000;
+let abortLoop = false;
+
+function pdfIconSVG() {
+  return `<svg viewBox="0 0 16 18" width="16" height="18" fill="none"><path d="M2 1 H10 L14 5 V17 H2 Z" fill="#FFFFFF" stroke="#CCC6CC" stroke-width="1"/><path d="M10 1 V5 H14" fill="#EDEBED" stroke="#CCC6CC" stroke-width="0.8"/><rect x="3" y="11" width="10" height="3.6" rx="0.6" fill="#B5413D"/><text x="8" y="13.7" text-anchor="middle" font-family="Inter Tight, sans-serif" font-size="2.6" font-weight="700" fill="#FFF" letter-spacing="0.2">PDF</text></svg>`;
+}
+function sparkleSVG() {
+  return `<svg viewBox="0 0 12 12" fill="#282731"><path d="M6 0.5 L7 5 L11.5 6 L7 7 L6 11.5 L5 7 L0.5 6 L5 5 Z"/></svg>`;
+}
+function linkSmallSVG() {
+  return `<svg viewBox="0 0 10 10" fill="none"><path d="M3 5 C3 4 3.8 3 5 3 H6.5" stroke="#6D6A72" stroke-width="0.9"/><path d="M7 5 C7 6 6.2 7 5 7 H3.5" stroke="#6D6A72" stroke-width="0.9"/></svg>`;
+}
+
+function setText(el, t) { el.textContent = t; }
+
+function showScene(name) {
+  $$('.scene').forEach(s => s.classList.remove('active'));
+  $('#scene-' + name).classList.add('active');
+}
+
+function moveCursorTo(left, top) { cursor.style.transform = `translate(${left}px, ${top}px)`; }
+function placeCursorAt(left, top) {
+  cursor.style.transition = 'none';
+  cursor.style.transform = `translate(${left}px, ${top}px)`;
+  void cursor.offsetWidth;
+  cursor.style.transition = 'opacity 320ms var(--ease), transform 800ms cubic-bezier(.2,.7,.2,1)';
+}
+
+function buildTitleSpans(text) {
+  const wrap = document.createElement('span');
+  wrap.className = 'title-text';
+  for (const c of text) {
+    const ch = document.createElement('span');
+    ch.className = 'ch in';
+    ch.textContent = c === ' ' ? ' ' : c;
+    wrap.appendChild(ch);
+  }
+  return wrap;
+}
+
+function spansChars(spanWrap) { return Array.from(spanWrap.querySelectorAll('.ch')); }
+
+function makeOrderFormCard() {
+  const card = document.createElement('div');
+  card.className = 'agreement-card upload-in';
+  card.id = 'card-of';
+  card.innerHTML = `<div class="agreement-id" id="of-id">IC-16</div><div class="agreement-title"><span class="pdf-icon">${pdfIconSVG()}</span><span class="sparkle" id="of-sparkle">${sparkleSVG()}</span><span id="of-title-host"></span><div class="shimmer" id="of-shimmer"></div></div><div class="tags" id="of-tags"><span class="tag">Recruitment</span><span class="tag">Software</span></div><div class="linked-caption" id="of-linked">${linkSmallSVG()}<span>Linked to <u>IC-05 Pothos - Master Services Agreement</u></span></div>`;
+  cardsHost.appendChild(card);
+  const host = card.querySelector('#of-title-host');
+  host.appendChild(buildTitleSpans('Copy of Pothos - Order Form 4'));
+  return card;
+}
+
+function makeMSACard() {
+  const card = document.createElement('div');
+  card.className = 'agreement-card appear';
+  card.id = 'card-msa';
+  card.innerHTML = `<div class="agreement-id show">IC-05</div><div class="agreement-title"><span class="pdf-icon">${pdfIconSVG()}</span>Pothos - Master Services Agreement</div>`;
+  cardsHost.insertBefore(card, cardsHost.firstChild);
+  void card.offsetWidth;
+  card.classList.add('in');
+  return card;
+}
+
+function drawLinkBetween(msaCard, ofCard) {
+  const hostR = cardsHost.getBoundingClientRect();
+  const a = msaCard.getBoundingClientRect();
+  const b = ofCard.getBoundingClientRect();
+  const x = 12;
+  const y1 = (a.bottom - hostR.top);
+  const y2 = (b.top - hostR.top) + 16;
+
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('class', 'link-svg');
+  svg.style.left = '0'; svg.style.top = '0'; svg.style.width = '100%';
+  svg.style.height = (b.top - hostR.top + 24) + 'px';
+  svg.setAttribute('viewBox', `0 0 ${hostR.width} ${b.top - hostR.top + 24}`);
+  svg.innerHTML = `<path d="M${x} ${y1} L${x} ${(y1+y2)/2 - 6} Q${x} ${(y1+y2)/2} ${x+8} ${(y1+y2)/2} Q${x} ${(y1+y2)/2} ${x} ${(y1+y2)/2 + 6} L${x} ${y2}" /><g class="midicon" transform="translate(${x-5}, ${(y1+y2)/2 - 5})"><rect x="0" y="0" width="10" height="10" rx="2" fill="#FFFFFF" stroke="#CCC6CC" stroke-width="0.8"/><path d="M3.2 5 C3.2 4.2 3.8 3.6 4.6 3.6 H5.8" stroke="#6D6A72" stroke-width="0.9" fill="none"/><path d="M6.8 5 C6.8 5.8 6.2 6.4 5.4 6.4 H4.2" stroke="#6D6A72" stroke-width="0.9" fill="none"/></g>`;
+  cardsHost.appendChild(svg);
+  void svg.offsetWidth;
+  svg.classList.add('draw');
+  return svg;
+}
+
+async function reset() {
+  cardsHost.innerHTML = '';
+  setText($('#ag-count'), '0 Agreements');
+  $('#sec-base').classList.remove('open');
+  $('#av-scroll-inner').style.transition = 'none';
+  $('#av-scroll-inner').style.transform = 'translateY(0)';
+  $('#modal').classList.remove('show');
+  cursor.classList.remove('show');
+  showScene('inbox');
+  void document.body.offsetWidth;
+  $('#av-scroll-inner').style.removeProperty('transition');
+}
+
+async function runLoop() {
+  while (!abortLoop) {
+    await reset();
+    const start = performance.now();
+    const tick = () => {
+      const t = (performance.now() - start) / TOTAL;
+      if (t < 1 && !abortLoop) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+
+    await sleep(300);
+    const ofCard = makeOrderFormCard();
+    await sleep(800);
+
+    await sleep(80);
+    const titleHost = $('#of-title-host');
+    const oldWrap = titleHost.querySelector('.title-text');
+    $('#of-sparkle').classList.add('show');
+    $('#of-shimmer').classList.add('run');
+
+    const caret = document.createElement('span');
+    caret.textContent = '|';
+    caret.style.cssText = 'display:inline-block; margin-left:1px; color:var(--gray-xdark); animation: caret-blink 600ms steps(2,start) infinite;';
+    titleHost.appendChild(caret);
+
+    const oldChars = spansChars(oldWrap);
+    const backspaceTotal = 480;
+    const stepBack = backspaceTotal / Math.max(1, oldChars.length);
+    for (let i = oldChars.length - 1; i >= 0; i--) { oldChars[i].remove(); await sleep(stepBack); }
+    await sleep(80);
+
+    const newText = 'Pothos - Order Form (Data Management)';
+    const newWrap = document.createElement('span');
+    newWrap.className = 'title-text';
+    titleHost.insertBefore(newWrap, caret);
+    const typeTotal = 760;
+    const stepType = typeTotal / Math.max(1, newText.length);
+    for (let i = 0; i < newText.length; i++) {
+      const ch = document.createElement('span');
+      ch.className = 'ch in';
+      ch.textContent = newText[i] === ' ' ? ' ' : newText[i];
+      newWrap.appendChild(ch);
+      await sleep(stepType);
+    }
+
+    caret.remove();
+    $('#of-sparkle').classList.remove('show');
+    $('#of-tags').classList.add('show');
+    await sleep(160);
+
+    const msa = makeMSACard();
+    await sleep(580);
+    setText($('#of-id'), 'IC-16');
+    $('#of-id').classList.add('show');
+    ofCard.classList.add('linked-child');
+    await sleep(220);
+    const linkSvg = drawLinkBetween(msa, ofCard);
+    await sleep(700);
+    $('#of-linked').classList.add('show');
+    setText($('#ag-count'), '2 Agreements');
+    await sleep(500);
+
+    cursor.classList.add('show');
+    const uiR = ui.getBoundingClientRect();
+    const ofR = ofCard.getBoundingClientRect();
+    placeCursorAt(ofR.right - uiR.left - 80, ofR.bottom - uiR.top + 40);
+    await sleep(40);
+    moveCursorTo(ofR.left - uiR.left + 60, ofR.top - uiR.top + 36);
+    await sleep(520);
+    ofCard.style.transition = 'background-color 240ms var(--ease)';
+    ofCard.style.background = 'var(--gray-light)';
+    setTimeout(() => { ofCard.style.background = ''; }, 240);
+    await sleep(180);
+
+    cursor.classList.remove('show');
+    showScene('detail');
+    await sleep(520);
+
+    $('#sec-base').classList.add('open');
+    await sleep(950);
+
+    const inner = $('#av-scroll-inner');
+    inner.style.transition = 'transform 1300ms cubic-bezier(.4,0,.2,1)';
+    inner.style.transform = 'translateY(-220px)';
+    await sleep(1400);
+
+    cursor.classList.add('show');
+    const linkEl = $('#bench-link');
+    const rowEl = $('#dp-bench');
+    const linkR = linkEl.getBoundingClientRect();
+    const rowR = rowEl.getBoundingClientRect();
+    const rowMidY = rowR.top - uiR.top + rowR.height / 2;
+    placeCursorAt(linkR.left - uiR.left - 40, rowMidY + 50);
+    await sleep(40);
+    moveCursorTo(linkR.left - uiR.left - 4, rowMidY);
+    await sleep(520);
+
+    const modal = $('#modal');
+    const benchR = $('#dp-bench').getBoundingClientRect();
+    modal.style.top = (benchR.top - uiR.top + 26) + 'px';
+    modal.classList.add('show');
+    await sleep(900);
+
+    await sleep(380);
+    cursor.classList.remove('show');
+    modal.classList.remove('show');
+    sceneDetail.style.transition = 'opacity 420ms var(--ease)';
+    sceneDetail.classList.remove('active');
+    await sleep(280);
+  }
+}
+
+runLoop();
+window.addEventListener('beforeunload', () => { abortLoop = true; });
+</script>
+</body>
+</html>
